@@ -10,7 +10,7 @@
     "./v2": "./src/v2/index.js"
   },
   "bin": {
-    "npm-source-explorer": "./cli/index.js"
+    "npm-source-explorer": "cli/index.js"
   },
   "files": [
     "src/",
