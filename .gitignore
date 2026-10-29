@@ -1,0 +1,7 @@
+node_modules/
+.npm/
+coverage/
+*.log
+.DS_Store
+.env
+npm-source-explorer-output/

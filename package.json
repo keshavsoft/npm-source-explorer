@@ -1,0 +1,40 @@
+{
+  "name": "@keshavsoft/npm-source-explorer",
+  "version": "1.2.1",
+  "description": "Analyze npm dependency graphs and inspect the source repositories behind published packages.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./v1": "./src/v1/index.js",
+    "./v2": "./src/v2/index.js"
+  },
+  "bin": {
+    "npm-source-explorer": "./cli/index.js"
+  },
+  "files": [
+    "src/",
+    "cli/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check cli/index.js && node --check src/index.js && node --check src/V1/index.js && node --check src/V2/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@npmcli/arborist": "^10.0.4"
+  },
+  "keywords": [
+    "npm",
+    "dependency-graph",
+    "repository",
+    "git",
+    "source",
+    "cli"
+  ],
+  "license": "MIT"
+}
