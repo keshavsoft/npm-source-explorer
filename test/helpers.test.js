@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeRepositoryUrl, getRepositoryInfo } from "../src/V1/index.js";
+import { normalizeRepositoryUrl, getRepositoryInfo } from "../src/v1/index.js";
 
 test("normalizes git+https repository URLs", () => {
   assert.equal(

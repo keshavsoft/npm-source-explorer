@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { promisify } from "node:util";
-import { normalizeRepositoryUrl } from "../V1/index.js";
+import { normalizeRepositoryUrl } from "../v1/index.js";
 
 const spawnAsync = promisify(spawn);
 

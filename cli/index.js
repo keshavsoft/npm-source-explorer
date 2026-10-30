@@ -3,10 +3,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { analyzeDependencies } from "../src/V1/index.js";
-import { verifyRepositories, cloneRepositories } from "../src/V2/index.js";
+import { analyzeDependencies } from "../src/v1/index.js";
+import { verifyRepositories, cloneRepositories } from "../src/v2/index.js";
 
-const VERSION = "0.1.0";
+const packageJson = JSON.parse(
+  await fs.readFile(new URL("../package.json", import.meta.url), "utf8")
+);
+const VERSION = packageJson.version;
 
 function help() {
   console.log(`npm-source-explorer ${VERSION}

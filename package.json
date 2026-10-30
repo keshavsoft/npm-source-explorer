@@ -20,8 +20,17 @@
   ],
   "scripts": {
     "test": "node --test",
-    "check": "node --check cli/index.js && node --check src/index.js && node --check src/V1/index.js && node --check src/V2/index.js"
+    "check": "node --check cli/index.js && node --check src/index.js && node --check src/v1/index.js && node --check src/v2/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keshavsoft/npm-source-explorer.git"
+  },
+  "homepage": "https://github.com/keshavsoft/npm-source-explorer#readme",
+  "bugs": {
+    "url": "https://github.com/keshavsoft/npm-source-explorer/issues"
+  },
+  "author": "KeshavSoft",
   "engines": {
     "node": ">=20"
   },
@@ -34,7 +43,11 @@
     "repository",
     "git",
     "source",
-    "cli"
+    "cli",
+    "arborist",
+    "security",
+    "audit",
+    "provenance"
   ],
   "license": "MIT"
 }

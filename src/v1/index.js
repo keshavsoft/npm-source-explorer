@@ -183,7 +183,7 @@ export async function analyzeDependencies(packageSpec, options = {}) {
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const spec = process.argv[2];
   if (!spec) {
-    console.error("Usage: node src/V1/index.js <package-spec>");
+    console.error("Usage: node src/v1/index.js <package-spec>");
     process.exitCode = 1;
   } else {
     analyzeDependencies(spec)
