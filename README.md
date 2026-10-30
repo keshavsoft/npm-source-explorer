@@ -1,112 +1,153 @@
 # @keshavsoft/npm-source-explorer
 
+[![npm](https://img.shields.io/npm/v/@keshavsoft/npm-source-explorer)](https://www.npmjs.com/package/@keshavsoft/npm-source-explorer)
+[![license](https://img.shields.io/npm/l/@keshavsoft/npm-source-explorer)](https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE)
+[![node](https://img.shields.io/node/v/@keshavsoft/npm-source-explorer)](https://nodejs.org)
+
 Inspect an npm package's resolved dependency graph and investigate the source repositories recorded in package metadata.
 
-> **Current scope:** V1 installs the requested package into a temporary directory and exports the resolved dependency graph. V2 adds repository URL checks, Git tag checks, and optional repository cloning. Network checks depend on npm, Git, and the target hosting service being reachable.
+- **V1** — installs the target into a temporary directory and exports the full resolved dependency graph as JSON
+- **V2** — builds on V1, adding repository URL checks, Git tag verification, and optional source cloning
+
+> Network checks depend on npm, Git, and the target hosting service being reachable.
+
+---
 
 ## Requirements
 
-- Node.js 20 or newer
+- Node.js 20+
 - npm
-- Git (needed for repository verification and cloning)
+- Git _(required for `verify` and `clone` commands)_
 
-## Install for development
+---
+
+## Quick start
+
+No install needed — just use `npx`:
 
 ```bash
+npx @keshavsoft/npm-source-explorer analyze <package>
+npx @keshavsoft/npm-source-explorer verify  <package>
+npx @keshavsoft/npm-source-explorer clone   <package>
+```
+
+---
+
+## CLI
+
+```
+npm-source-explorer analyze <package-spec> [--out <file>] [--no-optional]
+npm-source-explorer verify  <package-spec> [--out <file>] [--no-optional]
+npm-source-explorer clone   <package-spec> [--clone-dir <dir>] [--no-optional]
+```
+
+### Commands
+
+| Command   | Description |
+|-----------|-------------|
+| `analyze` | Resolve and export the full dependency graph as JSON |
+| `verify`  | Check repository URLs and Git version tags for each dependency |
+| `clone`   | Clone every distinct source repository in the dependency tree |
+
+### Options
+
+| Option              | Default                              | Description |
+|---------------------|--------------------------------------|-------------|
+| `--out <file>`      | stdout                               | Write JSON output to a file |
+| `--clone-dir <dir>` | `./npm-source-explorer-sources`      | Destination for cloned repositories |
+| `--no-optional`     | —                                    | Exclude optional dependencies |
+| `--help, -h`        | —                                    | Show help |
+| `--version, -v`     | —                                    | Show version |
+
+### Examples
+
+```bash
+# Analyze a package and save the dependency graph
+npx @keshavsoft/npm-source-explorer analyze json-renderers --out ./reports/deps.json
+
+# Verify repository URLs and Git tags
+npx @keshavsoft/npm-source-explorer verify react --out ./reports/react-verify.json
+
+# Clone all source repositories referenced in the tree
+npx @keshavsoft/npm-source-explorer clone lodash --clone-dir ./sources
+
+# Exclude optional dependencies
+npx @keshavsoft/npm-source-explorer analyze webpack --no-optional
+```
+
+---
+
+## JSON output
+
+The `analyze` report contains:
+
+| Field         | Description |
+|---------------|-------------|
+| `target`      | Requested package spec and resolved identity |
+| `summary`     | Counts of package instances, edges, and unresolved edges |
+| `nodes`       | Each resolved package — name, version, location, repository metadata |
+| `edges`       | Dependency relationships with type and validity |
+| `generatedAt` | ISO timestamp |
+
+The `verify` report extends `analyze` with:
+
+- `repositoryChecks` — per-package HTTP reachability and Git tag match results
+- `verificationSummary` — aggregate counts
+
+> A missing exact version tag is a **signal to inspect**, not proof of a problem. Repositories use many tag conventions.
+
+The `clone` report lists each repository URL, its destination path, and clone status (`cloned`, `skipped-existing`, `clone-failed`).
+
+---
+
+## Library API
+
+```js
+import { analyzeDependencies } from "@keshavsoft/npm-source-explorer/v1";
+import { verifyRepositories, cloneRepositories } from "@keshavsoft/npm-source-explorer/v2";
+
+const report       = await analyzeDependencies("json-renderers");
+const verification = await verifyRepositories(report);
+const cloned       = await cloneRepositories(report, "./cloned-sources");
+```
+
+---
+
+## Limitations
+
+- The resolved graph reflects the current npm/platform environment; optional or platform-specific dependencies may differ on other systems.
+- Repository metadata comes from each package's `package.json` and can be absent, malformed, or point to an unexpected repository.
+- Tag matching checks `v<version>` and `<version>` conventions only — not a cryptographic provenance check.
+- URL checks are best-effort and may be affected by rate limits, private repos, proxies, or firewalls.
+- The tool does not verify that the Git source and the npm tarball are byte-for-byte identical.
+
+---
+
+## Development
+
+```bash
+git clone https://github.com/keshavsoft/npm-source-explorer.git
+cd npm-source-explorer
 npm install
 npm test
 npm run check
 ```
 
-## CLI examples
-
-Analyze a package and write JSON:
+To test the CLI locally before publishing:
 
 ```bash
-npx . analyze json-renderers --out ./reports/json-renderers.json
+node ./cli/index.js analyze json-renderers --out ./dependencies.json
 ```
 
-Inspect npm repository metadata and check repository pages/tags:
+---
 
-```bash
-npx . verify json-renderers --out ./reports/json-renderers-verify.json
-```
+## Links
 
-Clone repositories referenced by the resolved dependency tree:
+- **npm** — https://www.npmjs.com/package/@keshavsoft/npm-source-explorer
+- **GitHub** — https://github.com/keshavsoft/npm-source-explorer
 
-```bash
-npx . clone json-renderers --clone-dir ./cloned-sources
-```
-
-After publishing, use:
-
-```bash
-npx @keshavsoft/npm-source-explorer analyze json-renderers --out dependencies.json
-npx @keshavsoft/npm-source-explorer verify json-renderers
-npx @keshavsoft/npm-source-explorer clone json-renderers --clone-dir ./sources
-```
-
-The `analyze` command accepts a package name or npm package spec, for example `json-renderers`, `json-renderers@1.21.7`, or `@scope/package@1.2.3`.
-
-## Output
-
-The JSON report contains:
-
-- `target`: requested package spec and resolved root package identity
-- `summary`: number of package instances and dependency edges
-- `nodes`: resolved package instances, versions, install locations, and repository metadata
-- `edges`: dependency relationships with dependency type and validity information
-- `generatedAt`: report timestamp
-
-`verify` adds a `repositoryChecks` array. A check can report that the repository URL is missing, the web page could not be reached, Git metadata could not be queried, or a version-like tag was found/not found. A missing exact tag is a **signal to inspect**, not proof that the npm release is invalid: repositories use many tag conventions and some publish from a commit without a matching tag.
-
-`clone` clones each distinct repository URL it can identify into the destination directory. Cloning is optional and can download a large amount of source. It does not execute package scripts itself, but installing the dependency tree for analysis may run lifecycle scripts according to npm's normal behavior. Review packages before analyzing untrusted targets.
-
-## CLI options
-
-- `--out <file>`: write the JSON report to a file; without it, JSON is printed to stdout.
-- `--clone-dir <dir>`: destination for cloned repositories.
-- `--no-optional`: omit optional dependencies from the graph.
-- `--help`: show help.
-
-## Library API
-
-```js
-import {
-  analyzeDependencies,
-  verifyRepositories,
-  cloneRepositories
-} from "@keshavsoft/npm-source-explorer";
-
-const report = await analyzeDependencies("json-renderers");
-const verification = await verifyRepositories(report);
-const cloned = await cloneRepositories(report, "./cloned-sources");
-```
-
-The V1 API is available from `@keshavsoft/npm-source-explorer/V1`; the V2 API is available from `@keshavsoft/npm-source-explorer/V2`.
-
-## Important limitations
-
-- The graph is the resolved installation tree for the current npm/platform environment. Optional or platform-specific dependencies can differ across systems.
-- Repository metadata comes from each installed package's `package.json`; it can be absent, malformed, or point to a different repository than expected.
-- Tag matching checks common `v<version>` and `<version>` tag names. It is not a cryptographic provenance or supply-chain attestation check.
-- URL checks are best-effort and may be affected by rate limits, private repositories, proxies, firewalls, or authentication.
-- The tool does not claim that Git source and npm tarball contents are byte-for-byte identical. That would require a separate reproducible-build/provenance comparison.
-
-## Publish
-
-Before publishing, verify that the scoped package name is available and that your npm account has permission to publish under `@keshavsoft`.
-
-```bash
-npm login
-npm test
-npm run check
-npm pack --dry-run
-npm publish --access public
-```
-
-If you want to test the CLI before publishing, run `node ./cli/index.js analyze json-renderers --out ./dependencies.json`.
+---
 
 ## License
 
-MIT
+[MIT](https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE)
