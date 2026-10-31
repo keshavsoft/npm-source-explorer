@@ -1,9 +1,10 @@
 # Architecture & Source Layout
 
 <p align="center">
+  <a href="https://keshavsoft.github.io/npm-source-explorer/">🌐 <strong>Live Documentation</strong></a> •
   <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">📦 <strong>npm Package</strong></a> •
   <a href="https://github.com/keshavsoft/npm-source-explorer">🐙 <strong>GitHub Repository</strong></a> •
-  <a href="https://github.com/keshavsoft/npm-source-explorer#readme">📖 <strong>Documentation</strong></a> •
+  <a href="https://github.com/keshavsoft/npm-source-explorer#readme">📖 <strong>README</strong></a> •
   <a href="https://github.com/keshavsoft/npm-source-explorer/issues">🐛 <strong>Issues</strong></a>
 </p>
 
@@ -15,6 +16,9 @@
 npm-source-explorer/
 ├── cli/
 │   └── index.js             # Command-line interface (analyze, verify, clone)
+├── docs/
+│   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
+│   └── index.html           # Interactive documentation website (GitHub Pages root)
 ├── src/
 │   ├── index.js             # Main public entrypoint exporting V1 and V2 APIs
 │   ├── v1/
@@ -59,10 +63,15 @@ npm-source-explorer/
 - Built on the native Node.js test runner (`node --test`).
 - Tests repository URL normalization, SSH cleaning, and missing metadata handling.
 
+### 6. `docs/index.html` (Documentation & Story Website)
+- Standalone, zero-dependency responsive HTML presentation page hosted via GitHub Pages.
+- Provides interactive narrative on software supply chain risks, dual-engine technical breakdown, and executable CLI examples.
+
 ---
 
 ## Related Links
 
+- 🌐 **Website**: [keshavsoft.github.io/npm-source-explorer](https://keshavsoft.github.io/npm-source-explorer/)
 - 📦 **npm**: [npmjs.com/package/@keshavsoft/npm-source-explorer](https://www.npmjs.com/package/@keshavsoft/npm-source-explorer)
 - 🐙 **GitHub**: [github.com/keshavsoft/npm-source-explorer](https://github.com/keshavsoft/npm-source-explorer)
 - 📄 **License**: [MIT License](https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE)

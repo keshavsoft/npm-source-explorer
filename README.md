@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="https://keshavsoft.github.io/npm-source-explorer/">🌐 <strong>Documentation Website</strong></a> •
   <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">📦 <strong>View on npm</strong></a> •
   <a href="https://github.com/keshavsoft/npm-source-explorer">🐙 <strong>GitHub Repository</strong></a> •
   <a href="https://github.com/keshavsoft/npm-source-explorer/issues">🐛 <strong>Report Issue</strong></a> •
@@ -168,6 +169,9 @@ console.log(`Successfully cloned ${cloned.filter(c => c.status === "cloned").len
 npm-source-explorer/
 ├── cli/
 │   └── index.js             # CLI commands: analyze, verify, and clone
+├── docs/
+│   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
+│   └── index.html           # Interactive documentation & story website
 ├── src/
 │   ├── index.js             # Public API exports
 │   ├── v1/
@@ -216,6 +220,7 @@ npm run check
 
 ## Links & Resources
 
+- 🌐 **Documentation Website**: [keshavsoft.github.io/npm-source-explorer](https://keshavsoft.github.io/npm-source-explorer/)
 - 📦 **npm Package**: [npmjs.com/package/@keshavsoft/npm-source-explorer](https://www.npmjs.com/package/@keshavsoft/npm-source-explorer)
 - 🐙 **GitHub Repository**: [github.com/keshavsoft/npm-source-explorer](https://github.com/keshavsoft/npm-source-explorer)
 - 🐛 **Issue Tracker**: [github.com/keshavsoft/npm-source-explorer/issues](https://github.com/keshavsoft/npm-source-explorer/issues)

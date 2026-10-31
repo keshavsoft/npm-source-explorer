@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>npm-source-explorer | Deep Dependency & Repository Intelligence</title>
+  <meta name="description" content="Inspect resolved npm dependency trees, verify repository metadata and Git tags, and clone upstream source code.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.75);
+      --bg-card-hover: rgba(31, 41, 55, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(59, 130, 246, 0.4);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.2);
+      --warning: #f59e0b;
+      --npm-red: #cb3837;
+      --github-dark: #24292e;
+      --radius: 12px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, Monaco, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 60%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+        linear-gradient(to bottom, #0a0e17, #070a10);
+      background-attachment: fixed;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    a:hover {
+      color: #60a5fa;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      background: rgba(10, 14, 23, 0.75);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 0;
+    }
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #fff;
+    }
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .nav-links a:hover {
+      color: #fff;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      border: 1px solid var(--border-color);
+    }
+    .btn-npm {
+      background: rgba(203, 56, 55, 0.15);
+      color: #f87171;
+      border-color: rgba(203, 56, 55, 0.35);
+    }
+    .btn-npm:hover {
+      background: var(--npm-red);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(203, 56, 55, 0.4);
+    }
+    .btn-github {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+    .btn-github:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 3.25rem;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p.lead {
+      max-width: 720px;
+      margin: 0 auto 36px;
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .cli-copy-box {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-accent);
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 0 25px var(--primary-glow);
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: #60a5fa;
+      user-select: all;
+    }
+    .cli-copy-box span.prompt {
+      color: var(--text-dim);
+      margin-right: 10px;
+    }
+
+    /* The Story Section */
+    .story-section {
+      padding: 60px 0;
+    }
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 40px;
+      max-width: 680px;
+    }
+    .story-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .story-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 32px;
+      position: relative;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .story-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+    .story-card .icon-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+    .icon-alert { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .icon-verify { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .icon-clone { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .story-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .story-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Architecture / Engine Comparison */
+    .engine-section {
+      padding: 60px 0;
+      border-top: 1px solid var(--border-color);
+    }
+    .engine-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    @media (max-width: 840px) {
+      .engine-columns { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 2.25rem; }
+    }
+    .engine-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+    .engine-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .tag-v1 {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .tag-v2 {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .engine-box ul {
+      list-style: none;
+    }
+    .engine-box li {
+      margin-bottom: 14px;
+      padding-left: 26px;
+      position: relative;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .engine-box li::before {
+      content: "✔";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* CLI & Commands Showcase */
+    .cli-section {
+      padding: 60px 0;
+      border-top: 1px solid var(--border-color);
+    }
+    .code-terminal {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 30px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+    .terminal-bar {
+      background: #161b22;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-left: 12px;
+    }
+    .terminal-content {
+      padding: 24px;
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      color: #e6edf3;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .terminal-content .cmd { color: #58a6ff; font-weight: 600; }
+    .terminal-content .comment { color: #8b949e; }
+    .terminal-content .success { color: #7ee787; }
+    .terminal-content .warning { color: #d29922; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 50px 0 30px;
+      background: #070a10;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+    .footer-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+    }
+    .footer-links a:hover {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <div class="brand">
+        <div class="brand-icon">⌘</div>
+        <span>npm-source-explorer</span>
+      </div>
+      <div class="nav-links">
+        <a href="#story">The Story</a>
+        <a href="#engines">Engines</a>
+        <a href="#cli">CLI Usage</a>
+        <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" class="nav-btn btn-npm" target="_blank" rel="noopener">
+          📦 npm v1.2.2
+        </a>
+        <a href="https://github.com/keshavsoft/npm-source-explorer" class="nav-btn btn-github" target="_blank" rel="noopener">
+          🐙 GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container">
+      <div class="badge-pill">
+        🛡️ Supply-Chain & Dependency Provenance Intelligence
+      </div>
+      <h1>Understand Every Dependency.<br>Inspect Every Source.</h1>
+      <p class="lead">
+        A dual-engine CLI and developer library that resolves npm dependency trees in clean isolation, cross-checks published versions against remote Git tags, and downloads upstream source repositories.
+      </p>
+
+      <div class="hero-actions">
+        <div class="cli-copy-box">
+          <span class="prompt">$</span> npx @keshavsoft/npm-source-explorer analyze &lt;package&gt;
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- The Story Section -->
+  <section class="story-section" id="story">
+    <div class="container">
+      <h2 class="section-title">The Story Behind The Tool</h2>
+      <p class="section-sub">
+        When you install an npm package, you inherit a sprawling graph of transitive dependencies written by hundreds of different authors. How do you verify what is actually running?
+      </p>
+
+      <div class="story-grid">
+        <div class="story-card">
+          <div class="icon-badge icon-alert">⚠️</div>
+          <h3>The Dependency Black Box</h3>
+          <p>
+            An npm tarball published to the registry is not guaranteed to come from a real or healthy Git repository. Repositories can be deleted, private, unmaintained, or omit repository fields altogether.
+          </p>
+        </div>
+
+        <div class="story-card">
+          <div class="icon-badge icon-verify">🔍</div>
+          <h3>Git Tag & Version Mismatches</h3>
+          <p>
+            Does version <code>2.4.1</code> on npm have a corresponding Git tag <code>v2.4.1</code> in the source repository? A missing or diverted tag is an immediate signal to investigate potential supply chain drift.
+          </p>
+        </div>
+
+        <div class="story-card">
+          <div class="icon-badge icon-clone">📥</div>
+          <h3>Local Source Auditing</h3>
+          <p>
+            Reviewing minified bundles in <code>node_modules</code> is painful. <code>npm-source-explorer</code> automatically gathers distinct Git URLs across the entire dependency graph and shallow-clones them locally.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture & Dual Engine -->
+  <section class="engine-section" id="engines">
+    <div class="container">
+      <h2 class="section-title">Two Modular Engines</h2>
+      <p class="section-sub">
+        Designed for speed, modularity, and programmatic integration in CI/CD pipelines.
+      </p>
+
+      <div class="engine-columns">
+        <div class="engine-box">
+          <div class="engine-header">
+            <span class="tag-v1">V1 ENGINE</span>
+            <h3 style="color: #fff;">Dependency Graph Traversal</h3>
+          </div>
+          <p style="color: var(--text-muted); margin-bottom: 20px;">
+            Uses <code>@npmcli/arborist</code> to simulate clean package installation inside isolated OS temp directories without touching your current environment.
+          </p>
+          <ul>
+            <li>Extracts complete resolved node trees and directed relationship edges.</li>
+            <li>Detects unresolved packages and invalid dependency constraints.</li>
+            <li>Normalizes messy repository URL permutations (<code>git+https</code>, scp shortcuts, SSH).</li>
+            <li>Exports structured machine-readable JSON for downstream pipelines.</li>
+          </ul>
+        </div>
+
+        <div class="engine-box">
+          <div class="engine-header">
+            <span class="tag-v2">V2 ENGINE</span>
+            <h3 style="color: #fff;">Repository & Tag Verification</h3>
+          </div>
+          <p style="color: var(--text-muted); margin-bottom: 20px;">
+            Takes the graph generated by V1 and tests external repository validity, version tags, and clones sources.
+          </p>
+          <ul>
+            <li>Performs asynchronous HTTP checks on repository homepages and endpoints.</li>
+            <li>Runs remote Git checks (<code>git ls-remote --tags</code>) for matching release tags.</li>
+            <li>Identifies distinct, de-duplicated repositories across all dependencies.</li>
+            <li>Performs shallow Git clones (<code>--depth 1</code>) directly into your designated directory.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLI & Terminal Showcase -->
+  <section class="cli-section" id="cli">
+    <div class="container">
+      <h2 class="section-title">CLI Commands & Reports</h2>
+      <p class="section-sub">Zero configuration required. Execute directly with <code>npx</code>:</p>
+
+      <div class="code-terminal">
+        <div class="terminal-bar">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="terminal-title">Terminal — npm-source-explorer</span>
+        </div>
+        <div class="terminal-content">
+          <p class="comment"># 1. Resolve and export full dependency graph report</p>
+          <p><span class="cmd">npx @keshavsoft/npm-source-explorer analyze</span> express --out ./express-graph.json</p>
+          <br>
+          <p class="comment"># 2. Check repository reachability and Git version tags</p>
+          <p><span class="cmd">npx @keshavsoft/npm-source-explorer verify</span> react --out ./react-verification.json</p>
+          <p class="success">✔ Checked 28 package instances: 28 reachable, 27 exact tags matched.</p>
+          <br>
+          <p class="comment"># 3. Clone all distinct source repos into a target folder</p>
+          <p><span class="cmd">npx @keshavsoft/npm-source-explorer clone</span> lodash --clone-dir ./audited-sources</p>
+          <p class="success">✔ Cloned 1 unique repository to ./audited-sources/lodash</p>
+        </div>
+      </div>
+
+      <!-- Programmatic API snippet -->
+      <h3 style="color: #fff; margin-bottom: 16px;">Programmatic Node.js ESM API</h3>
+      <div class="code-terminal">
+        <div class="terminal-bar">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="terminal-title">app.js — ESM Import</span>
+        </div>
+        <div class="terminal-content">
+<span class="cmd">import</span> { analyzeDependencies } <span class="cmd">from</span> <span class="success">"@keshavsoft/npm-source-explorer/v1"</span>;
+<span class="cmd">import</span> { verifyRepositories, cloneRepositories } <span class="cmd">from</span> <span class="success">"@keshavsoft/npm-source-explorer/v2"</span>;
+
+<span class="comment">// Analyze dependency tree in isolation</span>
+<span class="cmd">const</span> report = <span class="cmd">await</span> analyzeDependencies(<span class="success">"express"</span>);
+
+<span class="comment">// Verify Git release tags & reachability</span>
+<span class="cmd">const</span> verified = <span class="cmd">await</span> verifyRepositories(report);
+
+<span class="comment">// Clone all upstream repos</span>
+<span class="cmd">await</span> cloneRepositories(report, <span class="success">"./cloned-sources"</span>);
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <strong style="color: #fff;">@keshavsoft/npm-source-explorer</strong>
+          <p style="margin-top: 4px;">Inspect, verify, and clone npm source repositories.</p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">npm Registry</a></li>
+          <li><a href="https://github.com/keshavsoft/npm-source-explorer">GitHub Repo</a></li>
+          <li><a href="https://github.com/keshavsoft/npm-source-explorer/issues">Issues</a></li>
+          <li><a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE">MIT License</a></li>
+        </ul>
+      </div>
+      <p style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 24px;">
+        Copyright © 2026 <a href="https://github.com/keshavsoft">KeshavSoft</a>. Released under the MIT License.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
+
