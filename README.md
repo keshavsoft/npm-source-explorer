@@ -91,7 +91,7 @@ npm-source-explorer express
 
 ## Programmatic Library API (ESM)
 
-You can also use the V3 engine directly in your Node.js scripts or CI pipelines:
+You can also use the library directly in your Node.js scripts or CI pipelines:
 
 ```javascript
 import { exploreAndClone } from "@keshavsoft/npm-source-explorer";
@@ -109,9 +109,9 @@ console.log(`Successfully cloned ${summary.clonedCount} repositories!`);
 
 ---
 
-## Architecture (V3 Engine)
+## Codebase Architecture
 
-The V3 engine is lean, simple, and self-contained with **zero legacy dependencies**:
+The codebase is lean, simple, and self-contained:
 
 ```
 npm-source-explorer/
@@ -121,8 +121,8 @@ npm-source-explorer/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
 │   └── index.html           # Interactive storytelling documentation website
 ├── src/
-│   ├── index.js             # Root export (routes to V3)
-│   └── v3/                  # ★ Lean, Single-Purpose V3 Engine
+│   ├── index.js             # Root export (routes to v3)
+│   └── v3/                  # Lean, Single-Purpose Engine
 │       ├── git.js           # Clean URL normalization & shallow git clone
 │       ├── resolver.js      # Isolated dependency resolution & repo URL discovery
 │       └── index.js         # exploreAndClone workflow orchestrator

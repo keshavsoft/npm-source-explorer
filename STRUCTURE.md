@@ -28,15 +28,11 @@ npm-source-explorer/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
 │   └── index.html           # Interactive storytelling documentation website
 ├── src/
-│   ├── index.js             # Root export (routes to V3)
-│   ├── v3/                  # ★ Current Lean V3 Engine
-│   │   ├── git.js           # Normalizes repository URLs and runs shallow git clone
-│   │   ├── resolver.js      # Uses Arborist to recursively discover dependency repo URLs
-│   │   └── index.js         # exploreAndClone workflow orchestrator
-│   ├── v2/
-│   │   └── index.js         # V2 engine (legacy)
-│   └── v1/
-│       └── index.js         # V1 engine (legacy)
+│   ├── index.js             # Root export (routes to v3)
+│   └── v3/                  # Lean, Single-Purpose Engine
+│       ├── git.js           # Normalizes repository URLs and runs shallow git clone
+│       ├── resolver.js      # Uses Arborist to recursively discover dependency repo URLs
+│       └── index.js         # exploreAndClone workflow orchestrator
 ├── test/
 │   └── helpers.test.js      # Unit tests for URL normalizers
 ├── package.json             # Package configuration & metadata

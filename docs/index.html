@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>npm-source-explorer | Download & Inspect Upstream Source Repositories</title>
-  <meta name="description" content="One command to download and clone all upstream Git repositories behind any npm package as sibling folders in your workspace.">
+  <meta name="description" content="One command to recursively discover dependencies and download all upstream Git repositories as sibling folders in your workspace.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -24,7 +24,6 @@
       --primary-glow: rgba(59, 130, 246, 0.25);
       --accent: #10b981;
       --accent-glow: rgba(16, 185, 129, 0.2);
-      --warning: #f59e0b;
       --npm-red: #cb3837;
       --radius: 12px;
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -154,17 +153,17 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 16px;
+      padding: 6px 18px;
       border-radius: 100px;
       background: rgba(16, 185, 129, 0.12);
       border: 1px solid rgba(16, 185, 129, 0.3);
       color: #6ee7b7;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 600;
       margin-bottom: 24px;
     }
     .hero h1 {
-      font-size: 3.25rem;
+      font-size: 3.4rem;
       line-height: 1.15;
       font-weight: 800;
       letter-spacing: -0.03em;
@@ -174,7 +173,7 @@
       -webkit-text-fill-color: transparent;
     }
     .hero p.lead {
-      max-width: 740px;
+      max-width: 760px;
       margin: 0 auto 36px;
       font-size: 1.25rem;
       color: var(--text-muted);
@@ -193,7 +192,7 @@
       align-items: center;
       background: rgba(15, 23, 42, 0.8);
       border: 1px solid var(--border-accent);
-      padding: 14px 24px;
+      padding: 14px 26px;
       border-radius: var(--radius);
       box-shadow: 0 0 25px var(--primary-glow);
       font-family: var(--font-mono);
@@ -211,7 +210,7 @@
       padding: 60px 0;
     }
     .section-title {
-      font-size: 2rem;
+      font-size: 2.1rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       margin-bottom: 12px;
@@ -221,7 +220,7 @@
       color: var(--text-muted);
       font-size: 1.1rem;
       margin-bottom: 40px;
-      max-width: 720px;
+      max-width: 740px;
     }
     .story-grid {
       display: grid;
@@ -253,9 +252,9 @@
       font-size: 1.4rem;
       margin-bottom: 20px;
     }
-    .icon-alert { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .icon-verify { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-    .icon-clone { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .icon-problem { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .icon-recursive { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .icon-siblings { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 
     .story-card h3 {
       font-size: 1.25rem;
@@ -269,66 +268,67 @@
       line-height: 1.6;
     }
 
-    /* Sibling Layout Visual */
-    .sibling-visual {
+    /* Sibling Visual */
+    .sibling-box {
       background: #0d1117;
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
-      padding: 28px;
-      margin-top: 30px;
+      padding: 32px;
+      margin-top: 32px;
       font-family: var(--font-mono);
       font-size: 0.95rem;
-      color: #c9d1d9;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     }
-    .sibling-folder {
+    .folder-item {
       color: #58a6ff;
       font-weight: 600;
     }
-    .sibling-desc {
+    .folder-desc {
       color: var(--text-dim);
     }
 
-    /* V3 Simplicity Breakdown */
-    .engine-section {
+    /* Steps Section */
+    .steps-section {
       padding: 60px 0;
       border-top: 1px solid var(--border-color);
     }
-    .v3-grid {
+    .steps-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
       margin-top: 24px;
     }
-    .v3-card {
+    .step-card {
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
       padding: 28px;
+      position: relative;
     }
-    .v3-badge {
+    .step-num {
       display: inline-block;
       font-family: var(--font-mono);
       font-size: 0.8rem;
-      font-weight: 700;
-      color: #6ee7b7;
-      background: rgba(16, 185, 129, 0.15);
-      padding: 3px 10px;
+      font-weight: 800;
+      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.15);
+      padding: 4px 10px;
       border-radius: 4px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
-    .v3-card h4 {
+    .step-card h4 {
       color: #fff;
       font-size: 1.15rem;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
-    .v3-card p {
+    .step-card p {
       color: var(--text-muted);
       font-size: 0.92rem;
       line-height: 1.6;
     }
 
-    /* CLI Showcase */
-    .cli-section {
+    /* Terminal Output */
+    .terminal-section {
       padding: 60px 0;
       border-top: 1px solid var(--border-color);
     }
@@ -337,7 +337,7 @@
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
       overflow: hidden;
-      margin-bottom: 30px;
+      margin-top: 24px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
     }
     .terminal-bar {
@@ -410,10 +410,10 @@
       </div>
       <div class="nav-links">
         <a href="#story">The Story</a>
-        <a href="#v3">How It Works</a>
-        <a href="#cli">Quickstart</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#terminal">Live Demo</a>
         <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" class="nav-btn btn-npm" target="_blank" rel="noopener">
-          📦 npm v1.2.3
+          📦 npm
         </a>
         <a href="https://github.com/keshavsoft/npm-source-explorer" class="nav-btn btn-github" target="_blank" rel="noopener">
           🐙 GitHub
@@ -430,7 +430,7 @@
       </div>
       <h1>Download Every Source.<br>Explore Side-By-Side.</h1>
       <p class="lead">
-        No minified bundles. No 5,000-line JSON reports. Run one simple command, and all authentic upstream Git repositories behind any npm package are shallow-cloned as sibling folders right in your workspace.
+        Give it any package name. It recursively traces all dependencies, discovers every authentic upstream Git repository, and downloads them side-by-side as clean sibling folders right in your workspace.
       </p>
 
       <div class="hero-actions">
@@ -444,105 +444,107 @@
   <!-- The Story Section -->
   <section class="story-section" id="story">
     <div class="container">
-      <h2 class="section-title">The Story Behind The Tool</h2>
+      <h2 class="section-title">The Story: Why We Built This</h2>
       <p class="section-sub">
-        When auditing, learning, or debugging, developers don't want to dig through bundled code in <code>node_modules</code>.
+        When learning from, debugging, or auditing third-party code, reading <code>node_modules</code> is a nightmare.
       </p>
 
       <div class="story-grid">
         <div class="story-card">
-          <div class="icon-badge icon-alert">📦</div>
-          <h3>Node Modules Is A Maze</h3>
+          <div class="icon-badge icon-problem">📦</div>
+          <h3>The Node Modules Maze</h3>
           <p>
-            Bundled code in <code>node_modules</code> is stripped of original comments, missing test suites, unreadable, and has zero Git history.
+            Bundled packages in <code>node_modules</code> are minified, transpiled, stripped of original comments, missing unit tests, and lack Git history.
           </p>
         </div>
 
         <div class="story-card">
-          <div class="icon-badge icon-verify">🔍</div>
-          <h3>Automated Discovery</h3>
+          <div class="icon-badge icon-recursive">🔍</div>
+          <h3>Recursive Discovery</h3>
           <p>
-            <code>npm-source-explorer</code> inspects the target package and recursively follows every dependency edge to discover the real GitHub/Git repo behind each one.
+            It reads the package, recursively follows every nested dependency edge, and locates the authentic GitHub or Git repository declared by its authors.
           </p>
         </div>
 
         <div class="story-card">
-          <div class="icon-badge icon-clone">🗂️</div>
-          <h3>Clean Sibling Folders</h3>
+          <div class="icon-badge icon-siblings">🗂️</div>
+          <h3>All Sibling Repositories</h3>
           <p>
-            Every distinct repository is shallow-cloned directly into your current directory as a sibling folder. Open your IDE and search across the actual code.
+            Every distinct repository is downloaded side-by-side into your current directory. Open your editor and search through the actual, un-minified code.
           </p>
         </div>
       </div>
 
-      <div class="sibling-visual">
-        <div style="color: #8b949e; margin-bottom: 12px;">// Your workspace after running: npx @keshavsoft/npm-source-explorer express</div>
-        <div>📁 <span class="sibling-folder">my-audit-folder/</span></div>
-        <div>├── 📁 <span class="sibling-folder">express/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Authentic source code with commits, tests, docs</span></div>
-        <div>├── 📁 <span class="sibling-folder">accepts/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
-        <div>├── 📁 <span class="sibling-folder">body-parser/</span> <span class="sibling-desc">&nbsp;&nbsp;← Sibling dependency repo</span></div>
-        <div>├── 📁 <span class="sibling-folder">cookie/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
-        <div>└── 📁 <span class="sibling-folder">qs/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
+      <!-- Sibling Visual -->
+      <div class="sibling-box">
+        <div style="color: #8b949e; margin-bottom: 14px;">// What happens after running: npx @keshavsoft/npm-source-explorer json-renderers</div>
+        <div>📁 <span class="folder-item">my-workspace/</span></div>
+        <div>├── 📁 <span class="folder-item">json-renderers/</span> <span class="folder-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Root package source with full commit history</span></div>
+        <div>├── 📁 <span class="folder-item">json-renderers-build/</span> <span class="folder-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repository</span></div>
+        <div>├── 📁 <span class="folder-item">json-to-spec/</span> <span class="folder-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repository</span></div>
+        <div>├── 📁 <span class="folder-item">json-transformer-funcs/</span> <span class="folder-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repository</span></div>
+        <div>└── 📁 <span class="folder-item">json-transformer-funcs-primitive/</span> <span class="folder-desc">← Sibling dependency repository</span></div>
       </div>
     </div>
   </section>
 
-  <!-- How V3 Works -->
-  <section class="engine-section" id="v3">
+  <!-- How It Works (3 Steps) -->
+  <section class="steps-section" id="how-it-works">
     <div class="container">
-      <h2 class="section-title">Lean V3 Engine</h2>
+      <h2 class="section-title">How It Works in 3 Simple Steps</h2>
       <p class="section-sub">
-        Zero legacy bloat. Under 7 KB across 3 single-purpose modules.
+        Zero configuration required. Pure dependency discovery and shallow Git cloning.
       </p>
 
-      <div class="v3-grid">
-        <div class="v3-card">
-          <span class="v3-badge">1. RESOLVE</span>
-          <h4>Arborist Discovery</h4>
-          <p>Recursively inspects dependencies in an isolated temporary OS folder and extracts declared Git URLs.</p>
+      <div class="steps-grid">
+        <div class="step-card">
+          <span class="step-num">STEP 1</span>
+          <h4>Recursive Traversal</h4>
+          <p>Inspects the target package and recursively follows every dependency down the entire tree in clean isolation.</p>
         </div>
 
-        <div class="v3-card">
-          <span class="v3-badge">2. NORMALIZE</span>
-          <h4>Repository Cleaning</h4>
-          <p>Converts varied repo configurations (<code>git+https</code>, SCP SSH, shortcuts) into canonical HTTPS endpoints.</p>
+        <div class="step-card">
+          <span class="step-num">STEP 2</span>
+          <h4>Repository Resolution</h4>
+          <p>Extracts and normalizes the declared GitHub / Git repository URLs for every unique package found.</p>
         </div>
 
-        <div class="v3-card">
-          <span class="v3-badge">3. CLONE</span>
-          <h4>Sibling Cloner</h4>
-          <p>De-duplicates repositories and shallow-clones (<code>--depth 1</code>) them as clean sibling folders in your workspace.</p>
+        <div class="step-card">
+          <span class="step-num">STEP 3</span>
+          <h4>Sibling Git Cloning</h4>
+          <p>Performs fast shallow clones (<code>--depth 1</code>) directly into your workspace as clean sibling folders.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CLI Quickstart -->
-  <section class="cli-section" id="cli">
+  <!-- Live Terminal Demo -->
+  <section class="terminal-section" id="terminal">
     <div class="container">
-      <h2 class="section-title">Terminal Quickstart</h2>
-      <p class="section-sub">Open an empty folder and run:</p>
+      <h2 class="section-title">Real Terminal Execution</h2>
+      <p class="section-sub">Open any folder and run it:</p>
 
       <div class="code-terminal">
         <div class="terminal-bar">
           <span class="dot dot-red"></span>
           <span class="dot dot-yellow"></span>
           <span class="dot dot-green"></span>
-          <span class="terminal-title">Terminal</span>
+          <span class="terminal-title">Terminal — PowerShell / Bash</span>
         </div>
         <div class="terminal-content">
-          <p class="comment"># Create an exploration folder</p>
-          <p><span class="cmd">mkdir</span> audit-react && <span class="cmd">cd</span> audit-react</p>
+          <p><span class="cmd">$ npx @keshavsoft/npm-source-explorer json-renderers</span></p>
           <br>
-          <p class="comment"># Download and clone all upstream source repositories</p>
-          <p><span class="cmd">npx @keshavsoft/npm-source-explorer</span> react</p>
+          <p class="success">🔍 Exploring dependencies for "json-renderers"...</p>
+          <p class="success">📦 Found 26 packages (14 unique Git repositories).</p>
           <br>
-          <p class="success">🔍 Exploring dependencies for "react"...</p>
-          <p class="success">📦 Found 28 packages (12 unique Git repositories).</p>
-          <p>  ⬇ [1/12] react -> cloned into ./react</p>
-          <p>  ⬇ [2/12] loose-envify -> cloned into ./loose-envify</p>
-          <p>  ⬇ [3/12] js-tokens -> cloned into ./js-tokens</p>
-          <p class="success">✨ Finished! Cloned 12 repositories into ./audit-react</p>
+          <p>  ⬇ [1/14] json-renderers -> cloned into ./json-renderers</p>
+          <p>  ⬇ [2/14] json-renderers-build -> cloned into ./json-renderers-build</p>
+          <p>  ⬇ [3/14] json-to-spec -> cloned into ./json-to-spec</p>
+          <p>  ⬇ [4/14] json-transformer-funcs -> cloned into ./json-transformer-funcs</p>
+          <p>  ⬇ [5/14] json-transformer-funcs-primitive -> cloned into ./json-transformer-funcs-primitive</p>
+          <p>  ⬇ [6/14] json-transformer-funcs-one-dimension -> cloned into ./json-transformer-funcs-one-dimension</p>
+          <br>
+          <p class="success">✨ Finished! Cloned 14 repositories into ./</p>
         </div>
       </div>
     </div>
