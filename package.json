@@ -1,6 +1,6 @@
 {
   "name": "@keshavsoft/npm-source-explorer",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Analyze npm dependency graphs and inspect the source repositories behind published packages.",
   "type": "module",
   "main": "./src/index.js",
