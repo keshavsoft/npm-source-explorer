@@ -3,572 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>npm-source-explorer | Download & Inspect Upstream Source Repositories</title>
-  <meta name="description" content="One command to recursively discover dependencies and download all upstream Git repositories as sibling folders in your workspace.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>npm-source-explorer</title>
   <style>
-    :root {
-      --bg-primary: #0a0e17;
-      --bg-secondary: #111827;
-      --bg-card: rgba(17, 24, 39, 0.75);
-      --bg-card-hover: rgba(31, 41, 55, 0.85);
-      --border-color: rgba(255, 255, 255, 0.08);
-      --border-accent: rgba(59, 130, 246, 0.4);
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --text-dim: #6b7280;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --primary-glow: rgba(59, 130, 246, 0.25);
-      --accent: #10b981;
-      --accent-glow: rgba(16, 185, 129, 0.2);
-      --npm-red: #cb3837;
-      --radius: 12px;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --font-mono: 'JetBrains Mono', Consolas, Monaco, monospace;
-    }
-
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
     body {
-      font-family: var(--font-sans);
-      background-color: var(--bg-primary);
-      color: var(--text-main);
+      background-color: #ffffff;
+      color: #1f2328;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       line-height: 1.6;
-      overflow-x: hidden;
-      background-image: 
-        radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 85% 60%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
-        linear-gradient(to bottom, #0a0e17, #070a10);
-      background-attachment: fixed;
+      padding: 0;
+      margin: 0;
     }
-
     a {
-      color: var(--primary);
+      color: #0969da;
       text-decoration: none;
-      transition: color 0.2s ease;
     }
     a:hover {
-      color: #60a5fa;
+      text-decoration: underline;
     }
-
-    .container {
-      max-width: 1140px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    /* Navbar */
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      backdrop-filter: blur(16px);
-      background: rgba(10, 14, 23, 0.75);
-      border-bottom: 1px solid var(--border-color);
-      padding: 16px 0;
-    }
-    .nav-inner {
+    .header {
+      border-bottom: 1px solid #d0d7de;
+      padding: 16px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      max-width: 900px;
+      margin: 0 auto;
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .header-title {
       font-weight: 700;
       font-size: 1.15rem;
-      color: #fff;
+      color: #1f2328;
     }
-    .brand-icon {
-      width: 34px;
-      height: 34px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      font-size: 1.1rem;
-      font-weight: 800;
-      box-shadow: 0 0 15px var(--primary-glow);
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      list-style: none;
-    }
-    .nav-links a {
-      color: var(--text-muted);
+    .header-links a {
+      margin-left: 20px;
       font-size: 0.95rem;
-      font-weight: 500;
+      color: #656d76;
     }
-    .nav-links a:hover {
-      color: #fff;
+    .header-links a:hover {
+      color: #0969da;
     }
-    .nav-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      border: 1px solid var(--border-color);
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
     }
-    .btn-npm {
-      background: rgba(203, 56, 55, 0.15);
-      color: #f87171;
-      border-color: rgba(203, 56, 55, 0.35);
-    }
-    .btn-npm:hover {
-      background: var(--npm-red);
-      color: #fff;
-      box-shadow: 0 0 15px rgba(203, 56, 55, 0.4);
-    }
-    .btn-github {
-      background: rgba(255, 255, 255, 0.06);
-      color: #fff;
-    }
-    .btn-github:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    /* Hero */
-    .hero {
-      padding: 80px 0 60px;
-      text-align: center;
-      position: relative;
-    }
-    .badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 18px;
-      border-radius: 100px;
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #6ee7b7;
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 24px;
-    }
-    .hero h1 {
-      font-size: 3.4rem;
-      line-height: 1.15;
+    h1 {
+      font-size: 2.5rem;
       font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 20px;
-      background: linear-gradient(180deg, #ffffff 30%, #94a3b8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      color: #1f2328;
+      line-height: 1.2;
     }
-    .hero p.lead {
-      max-width: 760px;
-      margin: 0 auto 36px;
+    p.lead {
       font-size: 1.25rem;
-      color: var(--text-muted);
-      line-height: 1.6;
+      color: #656d76;
+      margin-bottom: 32px;
+      line-height: 1.5;
     }
-    .hero-actions {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 40px;
-    }
-    .cli-copy-box {
-      display: inline-flex;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid var(--border-accent);
-      padding: 14px 26px;
-      border-radius: var(--radius);
-      box-shadow: 0 0 25px var(--primary-glow);
-      font-family: var(--font-mono);
+    .command-box {
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
       font-size: 1.05rem;
-      color: #60a5fa;
+      color: #0969da;
+      margin-bottom: 48px;
       user-select: all;
     }
-    .cli-copy-box span.prompt {
-      color: var(--text-dim);
-      margin-right: 12px;
+    .command-box span {
+      color: #656d76;
+      margin-right: 8px;
     }
-
-    /* The Story Section */
-    .story-section {
-      padding: 60px 0;
-    }
-    .section-title {
-      font-size: 2.1rem;
+    h2 {
+      font-size: 1.6rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 12px;
-      color: #fff;
+      margin: 40px 0 16px;
+      color: #1f2328;
+      border-bottom: 1px solid #eaeef2;
+      padding-bottom: 8px;
     }
-    .section-sub {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      margin-bottom: 40px;
-      max-width: 740px;
+    p {
+      margin-bottom: 16px;
+      font-size: 1.05rem;
+      color: #1f2328;
     }
-    .story-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
-      margin-bottom: 48px;
+    ul {
+      margin: 0 0 24px 24px;
     }
-    .story-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 32px;
-      position: relative;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
+    li {
+      margin-bottom: 8px;
+      font-size: 1.02rem;
     }
-    .story-card:hover {
-      background: var(--bg-card-hover);
-      border-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-4px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-    }
-    .story-card .icon-badge {
-      width: 48px;
-      height: 48px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      font-size: 1.4rem;
-      margin-bottom: 20px;
-    }
-    .icon-problem { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .icon-recursive { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-    .icon-siblings { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-
-    .story-card h3 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 12px;
-    }
-    .story-card p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-
-    /* Sibling Visual */
-    .sibling-box {
-      background: #0d1117;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 32px;
-      margin-top: 32px;
-      font-family: var(--font-mono);
-      font-size: 0.95rem;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-    }
-    .folder-item {
-      color: #58a6ff;
-      font-weight: 600;
-    }
-    .folder-desc {
-      color: var(--text-dim);
-    }
-
-    /* Steps Section */
-    .steps-section {
-      padding: 60px 0;
-      border-top: 1px solid var(--border-color);
-    }
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      margin-top: 24px;
-    }
-    .step-card {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 28px;
-      position: relative;
-    }
-    .step-num {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      font-weight: 800;
-      color: #60a5fa;
-      background: rgba(59, 130, 246, 0.15);
-      padding: 4px 10px;
-      border-radius: 4px;
-      margin-bottom: 14px;
-    }
-    .step-card h4 {
-      color: #fff;
-      font-size: 1.15rem;
-      margin-bottom: 10px;
-    }
-    .step-card p {
-      color: var(--text-muted);
-      font-size: 0.92rem;
-      line-height: 1.6;
-    }
-
-    /* Terminal Output */
-    .terminal-section {
-      padding: 60px 0;
-      border-top: 1px solid var(--border-color);
-    }
-    .code-terminal {
-      background: #0d1117;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      overflow: hidden;
-      margin-top: 24px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-    }
-    .terminal-bar {
-      background: #161b22;
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-    .dot-red { background: #ff5f56; }
-    .dot-yellow { background: #ffbd2e; }
-    .dot-green { background: #27c93f; }
-    .terminal-title {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      margin-left: 12px;
-    }
-    .terminal-content {
-      padding: 24px;
-      font-family: var(--font-mono);
-      font-size: 0.92rem;
-      color: #e6edf3;
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      padding: 20px;
       overflow-x: auto;
-      line-height: 1.7;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #1f2328;
+      margin: 20px 0 32px;
     }
-    .terminal-content .cmd { color: #58a6ff; font-weight: 600; }
-    .terminal-content .comment { color: #8b949e; }
-    .terminal-content .success { color: #7ee787; }
-
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--border-color);
-      padding: 50px 0 30px;
-      background: #070a10;
-      color: var(--text-dim);
+    .footer {
+      border-top: 1px solid #d0d7de;
+      padding: 32px 24px;
+      text-align: center;
+      color: #656d76;
       font-size: 0.9rem;
-    }
-    .footer-grid {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 24px;
-      margin-bottom: 30px;
-    }
-    .footer-links {
-      display: flex;
-      gap: 20px;
-      list-style: none;
-    }
-    .footer-links a {
-      color: var(--text-muted);
-    }
-    .footer-links a:hover {
-      color: #fff;
+      max-width: 860px;
+      margin: 0 auto;
     }
   </style>
 </head>
 <body>
 
-  <!-- Navigation -->
-  <nav class="navbar">
-    <div class="container nav-inner">
-      <div class="brand">
-        <div class="brand-icon">⌘</div>
-        <span>npm-source-explorer</span>
-      </div>
-      <div class="nav-links">
-        <a href="#story">The Story</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#terminal">Live Demo</a>
-        <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" class="nav-btn btn-npm" target="_blank" rel="noopener">
-          📦 npm
-        </a>
-        <a href="https://github.com/keshavsoft/npm-source-explorer" class="nav-btn btn-github" target="_blank" rel="noopener">
-          🐙 GitHub
-        </a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero -->
-  <header class="hero">
-    <div class="container">
-      <div class="badge-pill">
-        ✨ One Simple Command • Sibling Source Repositories
-      </div>
-      <h1>Download Every Source.<br>Explore Side-By-Side.</h1>
-      <p class="lead">
-        Give it any package name. It recursively traces all dependencies, discovers every authentic upstream Git repository, and downloads them side-by-side as clean sibling folders right in your workspace.
-      </p>
-
-      <div class="hero-actions">
-        <div class="cli-copy-box">
-          <span class="prompt">$</span> npx @keshavsoft/npm-source-explorer &lt;package-name&gt;
-        </div>
-      </div>
+  <header class="header">
+    <div class="header-title">npm-source-explorer</div>
+    <div class="header-links">
+      <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">npm</a>
+      <a href="https://github.com/keshavsoft/npm-source-explorer">GitHub</a>
     </div>
   </header>
 
-  <!-- The Story Section -->
-  <section class="story-section" id="story">
-    <div class="container">
-      <h2 class="section-title">The Story: Why We Built This</h2>
-      <p class="section-sub">
-        When learning from, debugging, or auditing third-party code, reading <code>node_modules</code> is a nightmare.
-      </p>
+  <main class="container">
+    <h1>Download Every Source.<br>Explore Side-By-Side.</h1>
+    <p class="lead">
+      One command to recursively trace dependencies and download all upstream Git repositories as sibling folders in your workspace.
+    </p>
 
-      <div class="story-grid">
-        <div class="story-card">
-          <div class="icon-badge icon-problem">📦</div>
-          <h3>The Node Modules Maze</h3>
-          <p>
-            Bundled packages in <code>node_modules</code> are minified, transpiled, stripped of original comments, missing unit tests, and lack Git history.
-          </p>
-        </div>
-
-        <div class="story-card">
-          <div class="icon-badge icon-recursive">🔍</div>
-          <h3>Recursive Discovery</h3>
-          <p>
-            It reads the package, recursively follows every nested dependency edge, and locates the authentic GitHub or Git repository declared by its authors.
-          </p>
-        </div>
-
-        <div class="story-card">
-          <div class="icon-badge icon-siblings">🗂️</div>
-          <h3>All Sibling Repositories</h3>
-          <p>
-            Every distinct repository is downloaded side-by-side into your current directory. Open your editor and search through the actual, un-minified code.
-          </p>
-        </div>
-      </div>
-
-      <!-- Sibling Visual -->
-      <div class="sibling-box">
-        <div style="color: #8b949e; margin-bottom: 14px;">// What happens after running: npx @keshavsoft/npm-source-explorer json-renderers</div>
-        <div>📁 <span class="folder-item">my-workspace/</span></div>
-        <div>├── 📁 <span class="folder-item">json-renderers/</span> <span class="folder-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Root package source with full commit history</span></div>
-        <div>├── 📁 <span class="folder-item">json-renderers-build/</span> <span class="folder-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repository</span></div>
-        <div>├── 📁 <span class="folder-item">json-to-spec/</span> <span class="folder-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repository</span></div>
-        <div>├── 📁 <span class="folder-item">json-transformer-funcs/</span> <span class="folder-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repository</span></div>
-        <div>└── 📁 <span class="folder-item">json-transformer-funcs-primitive/</span> <span class="folder-desc">← Sibling dependency repository</span></div>
-      </div>
+    <div class="command-box">
+      <span>$</span> npx @keshavsoft/npm-source-explorer &lt;package-name&gt;
     </div>
-  </section>
 
-  <!-- How It Works (3 Steps) -->
-  <section class="steps-section" id="how-it-works">
-    <div class="container">
-      <h2 class="section-title">How It Works in 3 Simple Steps</h2>
-      <p class="section-sub">
-        Zero configuration required. Pure dependency discovery and shallow Git cloning.
-      </p>
+    <h2>The Story</h2>
+    <p>
+      When auditing, debugging, or learning from open-source libraries, looking into <code>node_modules</code> is painful. The code is bundled, minified, stripped of original comments, missing unit tests, and has no commit history.
+    </p>
+    <p>
+      <strong>What developers actually want is the original source code.</strong>
+    </p>
+    <p>
+      Instead of searching for 20 different repository URLs on GitHub, you run one command in an empty folder:
+    </p>
 
-      <div class="steps-grid">
-        <div class="step-card">
-          <span class="step-num">STEP 1</span>
-          <h4>Recursive Traversal</h4>
-          <p>Inspects the target package and recursively follows every dependency down the entire tree in clean isolation.</p>
-        </div>
+    <pre>
+mkdir audit-json && cd audit-json
+npx @keshavsoft/npm-source-explorer json-renderers
+    </pre>
 
-        <div class="step-card">
-          <span class="step-num">STEP 2</span>
-          <h4>Repository Resolution</h4>
-          <p>Extracts and normalizes the declared GitHub / Git repository URLs for every unique package found.</p>
-        </div>
+    <h2>How It Works</h2>
+    <ul>
+      <li><strong>Recursive Discovery:</strong> Reads the package and recursively inspects every dependency down the tree in clean isolation.</li>
+      <li><strong>Repository Resolution:</strong> Finds the authentic GitHub or Git repository URL declared by each package's authors.</li>
+      <li><strong>Sibling Cloning:</strong> Shallow-clones (<code>--depth 1</code>) each unique repository directly into your workspace side-by-side as siblings.</li>
+      <li><strong>Fail-Safe Protection:</strong> Each clone operation includes a 25-second timeout and disables interactive terminal prompts so private or slow repositories never freeze your terminal.</li>
+    </ul>
 
-        <div class="step-card">
-          <span class="step-num">STEP 3</span>
-          <h4>Sibling Git Cloning</h4>
-          <p>Performs fast shallow clones (<code>--depth 1</code>) directly into your workspace as clean sibling folders.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+    <h2>Your Workspace Result</h2>
+    <p>
+      After the command finishes, all repositories sit side-by-side as peers in your folder. Open your editor (<code>code .</code>) and search across the actual un-minified code:
+    </p>
 
-  <!-- Live Terminal Demo -->
-  <section class="terminal-section" id="terminal">
-    <div class="container">
-      <h2 class="section-title">Real Terminal Execution</h2>
-      <p class="section-sub">Open any folder and run it:</p>
+    <pre>
+my-workspace/
+├── json-renderers/                       &lt;-- Root package source with commits & tests
+├── json-renderers-build/                 &lt;-- Sibling dependency repository
+├── json-to-spec/                         &lt;-- Sibling dependency repository
+├── json-transformer-funcs/               &lt;-- Sibling dependency repository
+├── json-transformer-funcs-primitive/     &lt;-- Sibling dependency repository
+└── json-transformer-funcs-one-dimension/ &lt;-- Sibling dependency repository
+    </pre>
 
-      <div class="code-terminal">
-        <div class="terminal-bar">
-          <span class="dot dot-red"></span>
-          <span class="dot dot-yellow"></span>
-          <span class="dot dot-green"></span>
-          <span class="terminal-title">Terminal — PowerShell / Bash</span>
-        </div>
-        <div class="terminal-content">
-          <p><span class="cmd">$ npx @keshavsoft/npm-source-explorer json-renderers</span></p>
-          <br>
-          <p class="success">🔍 Exploring dependencies for "json-renderers"...</p>
-          <p class="success">📦 Found 26 packages (14 unique Git repositories).</p>
-          <br>
-          <p>  ⬇ [1/14] json-renderers -> cloned into ./json-renderers</p>
-          <p>  ⬇ [2/14] json-renderers-build -> cloned into ./json-renderers-build</p>
-          <p>  ⬇ [3/14] json-to-spec -> cloned into ./json-to-spec</p>
-          <p>  ⬇ [4/14] json-transformer-funcs -> cloned into ./json-transformer-funcs</p>
-          <p>  ⬇ [5/14] json-transformer-funcs-primitive -> cloned into ./json-transformer-funcs-primitive</p>
-          <p>  ⬇ [6/14] json-transformer-funcs-one-dimension -> cloned into ./json-transformer-funcs-one-dimension</p>
-          <br>
-          <p class="success">✨ Finished! Cloned 14 repositories into ./</p>
-        </div>
-      </div>
-    </div>
-  </section>
+    <h2>Terminal Output</h2>
+    <p>Real-time progress shows when each repository started and how long it took:</p>
 
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="footer-grid">
-        <div>
-          <strong style="color: #fff;">@keshavsoft/npm-source-explorer</strong>
-          <p style="margin-top: 4px;">Download and clone upstream source repositories as siblings.</p>
-        </div>
-        <ul class="footer-links">
-          <li><a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">npm Registry</a></li>
-          <li><a href="https://github.com/keshavsoft/npm-source-explorer">GitHub Repo</a></li>
-          <li><a href="https://github.com/keshavsoft/npm-source-explorer/issues">Issues</a></li>
-          <li><a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE">MIT License</a></li>
-        </ul>
-      </div>
-      <p style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 24px;">
-        Copyright © 2026 <a href="https://github.com/keshavsoft">KeshavSoft</a>. Released under the MIT License.
-      </p>
-    </div>
+    <pre>
+$ npx @keshavsoft/npm-source-explorer json-renderers
+
+🔍 Exploring dependencies for "json-renderers"...
+📦 Found 26 packages (14 unique Git repositories).
+
+  [1/14] json-renderers (started 07:50:01)... ✔ cloned in 1.8s
+  [2/14] json-renderers-build (started 07:50:03)... ✔ cloned in 1.4s
+  [3/14] json-to-spec (started 07:50:05)... ✔ cloned in 1.2s
+  [4/14] json-transformer-funcs (started 07:50:07)... ✔ cloned in 1.5s
+  ...
+
+✨ Finished in 18.2s!
+📁 Destination: ./
+📊 Cloned: 14 | Skipped: 0 | Failed/Timed Out: 0
+    </pre>
+  </main>
+
+  <footer class="footer">
+    <p>Released under the <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE">MIT License</a>. Created by <a href="https://github.com/keshavsoft">KeshavSoft</a>.</p>
   </footer>
 
 </body>

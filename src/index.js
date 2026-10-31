@@ -1,8 +1,7 @@
 /**
  * @keshavsoft/npm-source-explorer
  *
- * Single command to clone all recursive dependency repositories
- * as siblings in your current workspace.
+ * Root export pointing to V4 (featuring fail-safe timeouts and duration tracking).
  */
 
 export {
@@ -13,4 +12,4 @@ export {
   cloneRepo,
   analyzeDependencies,
   cloneRepositories
-} from "./v3/index.js";
+} from "./v4/index.js";

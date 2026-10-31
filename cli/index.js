@@ -2,7 +2,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import { exploreAndClone } from "../src/v3/index.js";
+import { exploreAndClone } from "../src/v4/index.js";
 
 const packageJson = JSON.parse(
   await fs.readFile(new URL("../package.json", import.meta.url), "utf8")
@@ -38,7 +38,7 @@ async function main() {
     return;
   }
 
-  // Handle optional legacy command prefixes like "clone" or "analyze"
+  // Handle optional legacy command prefixes
   if (["clone", "analyze", "verify"].includes(args[0]) && args[1]) {
     args.shift();
   }
@@ -49,25 +49,31 @@ async function main() {
   console.log(`\n🔍 Exploring dependencies for "${packageSpec}"...`);
 
   const summary = await exploreAndClone(packageSpec, targetDir, {
+    timeoutMs: 25000, // 25s fail-safe timeout per clone
     onProgress: (event) => {
       if (event.stage === "resolved") {
         console.log(`📦 Found ${event.totalPackages} packages (${event.uniqueCount} unique Git repositories).\n`);
-      } else if (event.stage === "cloning") {
-        const prefix = `[${event.index}/${event.total}] ${event.name}`;
+      } else if (event.stage === "cloning-start") {
+        process.stdout.write(`  [${event.index}/${event.total}] ${event.name} (started ${event.startedAt})... `);
+      } else if (event.stage === "cloning-finish") {
+        const secs = (event.durationMs / 1000).toFixed(1);
         if (event.status === "cloned") {
-          console.log(`  ⬇ ${prefix} -> cloned into ./${event.name}`);
+          console.log(`✔ cloned in ${secs}s`);
         } else if (event.status === "skipped") {
-          console.log(`  ⏩ ${prefix} -> skipped (already exists)`);
+          console.log(`⏩ skipped (already exists)`);
+        } else if (event.status === "timed-out") {
+          console.log(`⚠️ TIMED OUT after ${secs}s (skipped)`);
         } else if (event.status === "failed") {
-          console.error(`  ❌ ${prefix} -> failed (${event.detail})`);
+          console.log(`❌ failed (${event.detail})`);
         }
       }
     }
   });
 
-  console.log(`\n✨ Finished!`);
+  const totalSecs = (summary.totalDurationMs / 1000).toFixed(1);
+  console.log(`\n✨ Finished in ${totalSecs}s!`);
   console.log(`📁 Destination: ${summary.destination}`);
-  console.log(`📊 Cloned: ${summary.clonedCount} | Skipped: ${summary.skippedCount} | Failed: ${summary.failedCount}\n`);
+  console.log(`📊 Cloned: ${summary.clonedCount} | Skipped: ${summary.skippedCount} | Failed/Timed Out: ${summary.failedCount}\n`);
 }
 
 main().catch((error) => {

@@ -1,11 +1,12 @@
 {
   "name": "@keshavsoft/npm-source-explorer",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Download and clone all upstream Git repositories behind any npm package as sibling folders in your workspace.",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
+    "./v4": "./src/v4/index.js",
     "./v3": "./src/v3/index.js"
   },
   "bin": {
@@ -19,7 +20,7 @@
   ],
   "scripts": {
     "test": "node --test",
-    "check": "node --check cli/index.js && node --check src/index.js && node --check src/v3/index.js"
+    "check": "node --check cli/index.js && node --check src/index.js && node --check src/v4/index.js && node --check src/v3/index.js"
   },
   "repository": {
     "type": "git",
@@ -43,10 +44,8 @@
     "git",
     "source",
     "cli",
-    "arborist",
-    "security",
-    "audit",
-    "provenance"
+    "clone",
+    "siblings"
   ],
   "license": "MIT"
 }
