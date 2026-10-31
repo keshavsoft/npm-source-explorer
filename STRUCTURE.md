@@ -10,68 +10,69 @@
 
 ---
 
+## Architecture Philosophy
+
+1. **Keep It Simple & Focused:** The primary goal is to take any npm package and download the authentic upstream Git source code of it and all its dependencies as sibling folders in your workspace.
+2. **V3 is the Single Source of Truth:** `src/v3/` contains the lean, modern implementation. The CLI and root barrel export invoke V3 directly.
+3. **No Bloat, Zero Legacy Coupling:** V3 does not import or depend on V1 or V2. The entire V3 implementation is under 7 KB across 3 single-purpose files.
+
+---
+
 ## Directory Overview
 
 ```
 npm-source-explorer/
 ├── cli/
-│   └── index.js             # Command-line interface (analyze, verify, clone)
+│   └── index.js             # CLI runner: handles npx <package-spec> [destination]
 ├── docs/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
-│   └── index.html           # Interactive documentation website (GitHub Pages root)
+│   └── index.html           # Interactive storytelling documentation website
 ├── src/
-│   ├── index.js             # Main public entrypoint exporting V1 and V2 APIs
-│   ├── v1/
-│   │   └── index.js         # V1 engine: Isolated npm install via Arborist, dependency graph resolution
-│   └── v2/
-│       └── index.js         # V2 engine: Repository checks, Git version tag matching, and source cloning
+│   ├── index.js             # Root export (routes to V3)
+│   ├── v3/                  # ★ Current Lean V3 Engine
+│   │   ├── git.js           # Normalizes repository URLs and runs shallow git clone
+│   │   ├── resolver.js      # Uses Arborist to recursively discover dependency repo URLs
+│   │   └── index.js         # exploreAndClone workflow orchestrator
+│   ├── v2/
+│   │   └── index.js         # V2 engine (legacy)
+│   └── v1/
+│       └── index.js         # V1 engine (legacy)
 ├── test/
-│   └── helpers.test.js      # Unit tests for URL normalization and helpers
-├── LICENSE                  # MIT License
-├── package.json             # Package configuration, bin scripts, exports, and metadata
-├── README.md                # Documentation and usage guide for npm and GitHub
+│   └── helpers.test.js      # Unit tests for URL normalizers
+├── package.json             # Package configuration & metadata
+├── README.md                # Project documentation
 └── STRUCTURE.md             # Codebase layout and architecture reference
 ```
 
 ---
 
-## Module Breakdown
+## V3 Module Breakdown
 
-### 1. `src/v1/index.js` (Dependency Graph Engine)
-- Performs an isolated installation in a temporary OS directory using `@npmcli/arborist`.
-- Traverses the entire resolved dependency node graph.
-- Normalizes repository metadata across varying shapes (`git+https`, `git@github.com:...`, ssh, shortcuts).
-- Outputs a comprehensive JSON report containing `target`, `summary`, `nodes`, `edges`, and `generatedAt`.
+### 1. `src/v3/resolver.js` (Dependency Discovery)
+- Creates an isolated workspace in `os.tmpdir()` using `@npmcli/arborist`.
+- Recursively traverses the dependency tree to discover every package and its declared repository metadata.
+- Automatically cleans up the temporary directory when finished.
 
-### 2. `src/v2/index.js` (Repository & Provenance Engine)
-- Consumes a V1 dependency graph report.
-- Performs asynchronous HTTP reachability checks on referenced repository URLs.
-- Inspects remote Git tags (`git ls-remote --tags`) to verify if published versions match repository release tags (`vX.Y.Z` or `X.Y.Z`).
-- Discovers distinct repositories and clones them locally via `git clone --depth 1` into the designated target folder.
+### 2. `src/v3/git.js` (Git Normalization & Cloning)
+- Converts varied repository URL configurations (`git+https`, SCP-style `git@github.com:...`, SSH, object with `.url`) into canonical HTTPS endpoints.
+- Appends `.git` when necessary to prepare valid clone remotes.
+- Spawns `git clone --depth 1` to quickly pull the latest commit of each repository without bloating disk usage with full Git history.
 
-### 3. `src/index.js` (Library Barrel Export)
-- Exports the public programmatic API functions:
-  - From V1: `analyzeDependencies`, `normalizeRepositoryUrl`, `getRepositoryInfo`
-  - From V2: `verifyRepositories`, `checkRepository`, `cloneRepositories`
+### 3. `src/v3/index.js` (Pipeline Orchestrator)
+- Exposes `exploreAndClone(packageSpec, destinationDirectory, options)`.
+- De-duplicates repositories across dependencies.
+- Clones them side-by-side as siblings in the chosen directory (defaults to `process.cwd()`).
+- Skips existing folders safely and emits progress events.
 
 ### 4. `cli/index.js` (Command-Line Interface)
-- Executable bin entrypoint (`npm-source-explorer`) configured in `package.json`.
-- Dispatches commands: `analyze`, `verify`, and `clone`.
-- Supports CLI flags: `--out <file>`, `--clone-dir <dir>`, `--no-optional`, `--version`, and `--help`.
-
-### 5. `test/helpers.test.js` (Unit Tests)
-- Built on the native Node.js test runner (`node --test`).
-- Tests repository URL normalization, SSH cleaning, and missing metadata handling.
-
-### 6. `docs/index.html` (Documentation & Story Website)
-- Standalone, zero-dependency responsive HTML presentation page hosted via GitHub Pages.
-- Provides interactive narrative on software supply chain risks, dual-engine technical breakdown, and executable CLI examples.
+- Enables `npx @keshavsoft/npm-source-explorer <package-name> [destination]`.
+- Prints real-time terminal progress with clean emoji indicators.
 
 ---
 
 ## Related Links
 
-- 🌐 **Website**: [keshavsoft.github.io/npm-source-explorer](https://keshavsoft.github.io/npm-source-explorer/)
+- 🌐 **Documentation Site**: [keshavsoft.github.io/npm-source-explorer](https://keshavsoft.github.io/npm-source-explorer/)
 - 📦 **npm**: [npmjs.com/package/@keshavsoft/npm-source-explorer](https://www.npmjs.com/package/@keshavsoft/npm-source-explorer)
 - 🐙 **GitHub**: [github.com/keshavsoft/npm-source-explorer](https://github.com/keshavsoft/npm-source-explorer)
 - 📄 **License**: [MIT License](https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE)

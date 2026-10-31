@@ -1,11 +1,16 @@
-export {
-  analyzeDependencies,
-  normalizeRepositoryUrl,
-  getRepositoryInfo
-} from "./v1/index.js";
+/**
+ * @keshavsoft/npm-source-explorer
+ *
+ * Single command to clone all recursive dependency repositories
+ * as siblings in your current workspace.
+ */
 
 export {
-  verifyRepositories,
-  checkRepository,
+  exploreAndClone,
+  resolvePackageRepositories,
+  normalizeRepoUrl,
+  toCloneUrl,
+  cloneRepo,
+  analyzeDependencies,
   cloneRepositories
-} from "./v2/index.js";
+} from "./v3/index.js";

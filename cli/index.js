@@ -2,9 +2,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { analyzeDependencies } from "../src/v1/index.js";
-import { verifyRepositories, cloneRepositories } from "../src/v2/index.js";
+import { exploreAndClone } from "../src/v3/index.js";
 
 const packageJson = JSON.parse(
   await fs.readFile(new URL("../package.json", import.meta.url), "utf8")
@@ -12,98 +10,67 @@ const packageJson = JSON.parse(
 const VERSION = packageJson.version;
 
 function help() {
-  console.log(`npm-source-explorer ${VERSION}
+  console.log(`npm-source-explorer v${VERSION}
+
+Download and clone all upstream Git repositories for any npm package
+and its dependencies as sibling folders in your workspace.
 
 Usage:
-  npm-source-explorer analyze <package-spec> [--out <file>] [--no-optional]
-  npm-source-explorer verify  <package-spec> [--out <file>] [--no-optional]
-  npm-source-explorer clone   <package-spec> [--clone-dir <dir>] [--no-optional]
+  npm-source-explorer <package-name> [destination-folder]
 
-Commands:
-  analyze  Resolve and export a dependency graph.
-  verify   Analyze dependencies and check repository URLs and version tags.
-  clone    Analyze dependencies and clone each distinct recorded repository.
-
-Options:
-  --out <file>        Write JSON output to a file instead of stdout.
-  --clone-dir <dir>   Directory to receive cloned repositories (default: ./npm-source-explorer-sources).
-  --no-optional       Exclude optional dependencies from the graph.
-  --help, -h          Show this help.
-  --version, -v       Show the CLI version.
+Examples:
+  npx @keshavsoft/npm-source-explorer express
+  npx @keshavsoft/npm-source-explorer react ./react-sources
 `);
 }
 
-function parseArgs(args) {
-  const positional = [];
-  const options = { includeOptional: true };
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === "--help" || arg === "-h") options.help = true;
-    else if (arg === "--version" || arg === "-v") options.version = true;
-    else if (arg === "--no-optional") options.includeOptional = false;
-    else if (arg === "--out" || arg === "--clone-dir") {
-      const value = args[++i];
-      if (!value || value.startsWith("--")) throw new Error(`${arg} requires a value.`);
-      options[arg === "--out" ? "out" : "cloneDir"] = value;
-    } else if (arg.startsWith("-")) {
-      throw new Error(`Unknown option: ${arg}`);
-    } else positional.push(arg);
-  }
-  return { positional, options };
-}
-
-async function emitJson(data, outputPath) {
-  const json = `${JSON.stringify(data, null, 2)}\n`;
-  if (!outputPath) {
-    process.stdout.write(json);
-    return;
-  }
-  const absolute = path.resolve(outputPath);
-  await fs.mkdir(path.dirname(absolute), { recursive: true });
-  await fs.writeFile(absolute, json, "utf8");
-  console.error(`Wrote ${absolute}`);
-}
-
 async function main() {
-  const { positional, options } = parseArgs(process.argv.slice(2));
-  if (options.version) {
+  const args = process.argv.slice(2).filter((arg) => !arg.startsWith("-"));
+  const flags = process.argv.slice(2).filter((arg) => arg.startsWith("-"));
+
+  if (flags.includes("--version") || flags.includes("-v")) {
     console.log(VERSION);
     return;
   }
-  if (options.help || positional.length === 0) {
+
+  if (flags.includes("--help") || flags.includes("-h") || args.length === 0) {
     help();
     return;
   }
 
-  const command = positional[0];
-  if (!["analyze", "verify", "clone"].includes(command)) {
-    throw new Error(`Unknown command "${command}". Run with --help.`);
+  // Handle optional legacy command prefixes like "clone" or "analyze"
+  if (["clone", "analyze", "verify"].includes(args[0]) && args[1]) {
+    args.shift();
   }
-  const packageSpec = positional[1];
-  if (!packageSpec) throw new Error(`The ${command} command requires a package spec.`);
 
-  console.error(`Resolving ${packageSpec}...`);
-  const report = await analyzeDependencies(packageSpec, {
-    includeOptional: options.includeOptional
+  const packageSpec = args[0];
+  const targetDir = args[1] ? path.resolve(args[1]) : process.cwd();
+
+  console.log(`\n🔍 Exploring dependencies for "${packageSpec}"...`);
+
+  const summary = await exploreAndClone(packageSpec, targetDir, {
+    onProgress: (event) => {
+      if (event.stage === "resolved") {
+        console.log(`📦 Found ${event.totalPackages} packages (${event.uniqueCount} unique Git repositories).\n`);
+      } else if (event.stage === "cloning") {
+        const prefix = `[${event.index}/${event.total}] ${event.name}`;
+        if (event.status === "cloned") {
+          console.log(`  ⬇ ${prefix} -> cloned into ./${event.name}`);
+        } else if (event.status === "skipped") {
+          console.log(`  ⏩ ${prefix} -> skipped (already exists)`);
+        } else if (event.status === "failed") {
+          console.error(`  ❌ ${prefix} -> failed (${event.detail})`);
+        }
+      }
+    }
   });
 
-  if (command === "analyze") {
-    await emitJson(report, options.out);
-    return;
-  }
-  if (command === "verify") {
-    console.error(`Checking repository metadata for ${report.nodes.length} package instances...`);
-    const verified = await verifyRepositories(report);
-    await emitJson(verified, options.out);
-    return;
-  }
-
-  const cloneDir = options.cloneDir ?? "./npm-source-explorer-sources";
-  const result = await cloneRepositories(report, cloneDir);
-  await emitJson(result, options.out);
+  console.log(`\n✨ Finished!`);
+  console.log(`📁 Destination: ${summary.destination}`);
+  console.log(`📊 Cloned: ${summary.clonedCount} | Skipped: ${summary.skippedCount} | Failed: ${summary.failedCount}\n`);
 }
 
 main().catch((error) => {
-  console.error(`npm-source-explorer: ${error.message}`);
+  console.error(`\nnpm-source-explorer error: ${error.message}\n`);
   process.exitCode = 1;
 });

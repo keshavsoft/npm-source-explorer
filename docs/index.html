@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>npm-source-explorer | Deep Dependency & Repository Intelligence</title>
-  <meta name="description" content="Inspect resolved npm dependency trees, verify repository metadata and Git tags, and clone upstream source code.">
+  <title>npm-source-explorer | Download & Inspect Upstream Source Repositories</title>
+  <meta name="description" content="One command to download and clone all upstream Git repositories behind any npm package as sibling folders in your workspace.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -26,7 +26,6 @@
       --accent-glow: rgba(16, 185, 129, 0.2);
       --warning: #f59e0b;
       --npm-red: #cb3837;
-      --github-dark: #24292e;
       --radius: 12px;
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', Consolas, Monaco, monospace;
@@ -157,9 +156,9 @@
       gap: 8px;
       padding: 6px 16px;
       border-radius: 100px;
-      background: rgba(59, 130, 246, 0.12);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: #93c5fd;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
       font-size: 0.85rem;
       font-weight: 600;
       margin-bottom: 24px;
@@ -175,7 +174,7 @@
       -webkit-text-fill-color: transparent;
     }
     .hero p.lead {
-      max-width: 720px;
+      max-width: 740px;
       margin: 0 auto 36px;
       font-size: 1.25rem;
       color: var(--text-muted);
@@ -194,17 +193,17 @@
       align-items: center;
       background: rgba(15, 23, 42, 0.8);
       border: 1px solid var(--border-accent);
-      padding: 12px 20px;
+      padding: 14px 24px;
       border-radius: var(--radius);
       box-shadow: 0 0 25px var(--primary-glow);
       font-family: var(--font-mono);
-      font-size: 0.95rem;
+      font-size: 1.05rem;
       color: #60a5fa;
       user-select: all;
     }
     .cli-copy-box span.prompt {
       color: var(--text-dim);
-      margin-right: 10px;
+      margin-right: 12px;
     }
 
     /* The Story Section */
@@ -222,7 +221,7 @@
       color: var(--text-muted);
       font-size: 1.1rem;
       margin-bottom: 40px;
-      max-width: 680px;
+      max-width: 720px;
     }
     .story-grid {
       display: grid;
@@ -270,69 +269,65 @@
       line-height: 1.6;
     }
 
-    /* Architecture / Engine Comparison */
+    /* Sibling Layout Visual */
+    .sibling-visual {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-top: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: #c9d1d9;
+    }
+    .sibling-folder {
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    .sibling-desc {
+      color: var(--text-dim);
+    }
+
+    /* V3 Simplicity Breakdown */
     .engine-section {
       padding: 60px 0;
       border-top: 1px solid var(--border-color);
     }
-    .engine-columns {
+    .v3-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
     }
-    @media (max-width: 840px) {
-      .engine-columns { grid-template-columns: 1fr; }
-      .hero h1 { font-size: 2.25rem; }
-    }
-    .engine-box {
+    .v3-card {
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
-      padding: 32px;
+      padding: 28px;
     }
-    .engine-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .tag-v1 {
-      background: rgba(59, 130, 246, 0.2);
-      color: #93c5fd;
-      padding: 4px 10px;
-      border-radius: 6px;
+    .v3-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
       font-size: 0.8rem;
       font-weight: 700;
-    }
-    .tag-v2 {
-      background: rgba(16, 185, 129, 0.2);
       color: #6ee7b7;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 700;
+      background: rgba(16, 185, 129, 0.15);
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
     }
-    .engine-box ul {
-      list-style: none;
+    .v3-card h4 {
+      color: #fff;
+      font-size: 1.15rem;
+      margin-bottom: 8px;
     }
-    .engine-box li {
-      margin-bottom: 14px;
-      padding-left: 26px;
-      position: relative;
+    .v3-card p {
       color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-    .engine-box li::before {
-      content: "✔";
-      position: absolute;
-      left: 0;
-      color: var(--accent);
-      font-weight: bold;
+      font-size: 0.92rem;
+      line-height: 1.6;
     }
 
-    /* CLI & Commands Showcase */
+    /* CLI Showcase */
     .cli-section {
       padding: 60px 0;
       border-top: 1px solid var(--border-color);
@@ -374,7 +369,6 @@
     .terminal-content .cmd { color: #58a6ff; font-weight: 600; }
     .terminal-content .comment { color: #8b949e; }
     .terminal-content .success { color: #7ee787; }
-    .terminal-content .warning { color: #d29922; }
 
     /* Footer */
     footer {
@@ -416,10 +410,10 @@
       </div>
       <div class="nav-links">
         <a href="#story">The Story</a>
-        <a href="#engines">Engines</a>
-        <a href="#cli">CLI Usage</a>
+        <a href="#v3">How It Works</a>
+        <a href="#cli">Quickstart</a>
         <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" class="nav-btn btn-npm" target="_blank" rel="noopener">
-          📦 npm v1.2.2
+          📦 npm v1.2.3
         </a>
         <a href="https://github.com/keshavsoft/npm-source-explorer" class="nav-btn btn-github" target="_blank" rel="noopener">
           🐙 GitHub
@@ -432,16 +426,16 @@
   <header class="hero">
     <div class="container">
       <div class="badge-pill">
-        🛡️ Supply-Chain & Dependency Provenance Intelligence
+        ✨ One Simple Command • Sibling Source Repositories
       </div>
-      <h1>Understand Every Dependency.<br>Inspect Every Source.</h1>
+      <h1>Download Every Source.<br>Explore Side-By-Side.</h1>
       <p class="lead">
-        A dual-engine CLI and developer library that resolves npm dependency trees in clean isolation, cross-checks published versions against remote Git tags, and downloads upstream source repositories.
+        No minified bundles. No 5,000-line JSON reports. Run one simple command, and all authentic upstream Git repositories behind any npm package are shallow-cloned as sibling folders right in your workspace.
       </p>
 
       <div class="hero-actions">
         <div class="cli-copy-box">
-          <span class="prompt">$</span> npx @keshavsoft/npm-source-explorer analyze &lt;package&gt;
+          <span class="prompt">$</span> npx @keshavsoft/npm-source-explorer &lt;package-name&gt;
         </div>
       </div>
     </div>
@@ -452,129 +446,103 @@
     <div class="container">
       <h2 class="section-title">The Story Behind The Tool</h2>
       <p class="section-sub">
-        When you install an npm package, you inherit a sprawling graph of transitive dependencies written by hundreds of different authors. How do you verify what is actually running?
+        When auditing, learning, or debugging, developers don't want to dig through bundled code in <code>node_modules</code>.
       </p>
 
       <div class="story-grid">
         <div class="story-card">
-          <div class="icon-badge icon-alert">⚠️</div>
-          <h3>The Dependency Black Box</h3>
+          <div class="icon-badge icon-alert">📦</div>
+          <h3>Node Modules Is A Maze</h3>
           <p>
-            An npm tarball published to the registry is not guaranteed to come from a real or healthy Git repository. Repositories can be deleted, private, unmaintained, or omit repository fields altogether.
+            Bundled code in <code>node_modules</code> is stripped of original comments, missing test suites, unreadable, and has zero Git history.
           </p>
         </div>
 
         <div class="story-card">
           <div class="icon-badge icon-verify">🔍</div>
-          <h3>Git Tag & Version Mismatches</h3>
+          <h3>Automated Discovery</h3>
           <p>
-            Does version <code>2.4.1</code> on npm have a corresponding Git tag <code>v2.4.1</code> in the source repository? A missing or diverted tag is an immediate signal to investigate potential supply chain drift.
+            <code>npm-source-explorer</code> inspects the target package and recursively follows every dependency edge to discover the real GitHub/Git repo behind each one.
           </p>
         </div>
 
         <div class="story-card">
-          <div class="icon-badge icon-clone">📥</div>
-          <h3>Local Source Auditing</h3>
+          <div class="icon-badge icon-clone">🗂️</div>
+          <h3>Clean Sibling Folders</h3>
           <p>
-            Reviewing minified bundles in <code>node_modules</code> is painful. <code>npm-source-explorer</code> automatically gathers distinct Git URLs across the entire dependency graph and shallow-clones them locally.
+            Every distinct repository is shallow-cloned directly into your current directory as a sibling folder. Open your IDE and search across the actual code.
           </p>
         </div>
+      </div>
+
+      <div class="sibling-visual">
+        <div style="color: #8b949e; margin-bottom: 12px;">// Your workspace after running: npx @keshavsoft/npm-source-explorer express</div>
+        <div>📁 <span class="sibling-folder">my-audit-folder/</span></div>
+        <div>├── 📁 <span class="sibling-folder">express/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Authentic source code with commits, tests, docs</span></div>
+        <div>├── 📁 <span class="sibling-folder">accepts/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
+        <div>├── 📁 <span class="sibling-folder">body-parser/</span> <span class="sibling-desc">&nbsp;&nbsp;← Sibling dependency repo</span></div>
+        <div>├── 📁 <span class="sibling-folder">cookie/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
+        <div>└── 📁 <span class="sibling-folder">qs/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
       </div>
     </div>
   </section>
 
-  <!-- Architecture & Dual Engine -->
-  <section class="engine-section" id="engines">
+  <!-- How V3 Works -->
+  <section class="engine-section" id="v3">
     <div class="container">
-      <h2 class="section-title">Two Modular Engines</h2>
+      <h2 class="section-title">Lean V3 Engine</h2>
       <p class="section-sub">
-        Designed for speed, modularity, and programmatic integration in CI/CD pipelines.
+        Zero legacy bloat. Under 7 KB across 3 single-purpose modules.
       </p>
 
-      <div class="engine-columns">
-        <div class="engine-box">
-          <div class="engine-header">
-            <span class="tag-v1">V1 ENGINE</span>
-            <h3 style="color: #fff;">Dependency Graph Traversal</h3>
-          </div>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">
-            Uses <code>@npmcli/arborist</code> to simulate clean package installation inside isolated OS temp directories without touching your current environment.
-          </p>
-          <ul>
-            <li>Extracts complete resolved node trees and directed relationship edges.</li>
-            <li>Detects unresolved packages and invalid dependency constraints.</li>
-            <li>Normalizes messy repository URL permutations (<code>git+https</code>, scp shortcuts, SSH).</li>
-            <li>Exports structured machine-readable JSON for downstream pipelines.</li>
-          </ul>
+      <div class="v3-grid">
+        <div class="v3-card">
+          <span class="v3-badge">1. RESOLVE</span>
+          <h4>Arborist Discovery</h4>
+          <p>Recursively inspects dependencies in an isolated temporary OS folder and extracts declared Git URLs.</p>
         </div>
 
-        <div class="engine-box">
-          <div class="engine-header">
-            <span class="tag-v2">V2 ENGINE</span>
-            <h3 style="color: #fff;">Repository & Tag Verification</h3>
-          </div>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">
-            Takes the graph generated by V1 and tests external repository validity, version tags, and clones sources.
-          </p>
-          <ul>
-            <li>Performs asynchronous HTTP checks on repository homepages and endpoints.</li>
-            <li>Runs remote Git checks (<code>git ls-remote --tags</code>) for matching release tags.</li>
-            <li>Identifies distinct, de-duplicated repositories across all dependencies.</li>
-            <li>Performs shallow Git clones (<code>--depth 1</code>) directly into your designated directory.</li>
-          </ul>
+        <div class="v3-card">
+          <span class="v3-badge">2. NORMALIZE</span>
+          <h4>Repository Cleaning</h4>
+          <p>Converts varied repo configurations (<code>git+https</code>, SCP SSH, shortcuts) into canonical HTTPS endpoints.</p>
+        </div>
+
+        <div class="v3-card">
+          <span class="v3-badge">3. CLONE</span>
+          <h4>Sibling Cloner</h4>
+          <p>De-duplicates repositories and shallow-clones (<code>--depth 1</code>) them as clean sibling folders in your workspace.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CLI & Terminal Showcase -->
+  <!-- CLI Quickstart -->
   <section class="cli-section" id="cli">
     <div class="container">
-      <h2 class="section-title">CLI Commands & Reports</h2>
-      <p class="section-sub">Zero configuration required. Execute directly with <code>npx</code>:</p>
+      <h2 class="section-title">Terminal Quickstart</h2>
+      <p class="section-sub">Open an empty folder and run:</p>
 
       <div class="code-terminal">
         <div class="terminal-bar">
           <span class="dot dot-red"></span>
           <span class="dot dot-yellow"></span>
           <span class="dot dot-green"></span>
-          <span class="terminal-title">Terminal — npm-source-explorer</span>
+          <span class="terminal-title">Terminal</span>
         </div>
         <div class="terminal-content">
-          <p class="comment"># 1. Resolve and export full dependency graph report</p>
-          <p><span class="cmd">npx @keshavsoft/npm-source-explorer analyze</span> express --out ./express-graph.json</p>
+          <p class="comment"># Create an exploration folder</p>
+          <p><span class="cmd">mkdir</span> audit-react && <span class="cmd">cd</span> audit-react</p>
           <br>
-          <p class="comment"># 2. Check repository reachability and Git version tags</p>
-          <p><span class="cmd">npx @keshavsoft/npm-source-explorer verify</span> react --out ./react-verification.json</p>
-          <p class="success">✔ Checked 28 package instances: 28 reachable, 27 exact tags matched.</p>
+          <p class="comment"># Download and clone all upstream source repositories</p>
+          <p><span class="cmd">npx @keshavsoft/npm-source-explorer</span> react</p>
           <br>
-          <p class="comment"># 3. Clone all distinct source repos into a target folder</p>
-          <p><span class="cmd">npx @keshavsoft/npm-source-explorer clone</span> lodash --clone-dir ./audited-sources</p>
-          <p class="success">✔ Cloned 1 unique repository to ./audited-sources/lodash</p>
-        </div>
-      </div>
-
-      <!-- Programmatic API snippet -->
-      <h3 style="color: #fff; margin-bottom: 16px;">Programmatic Node.js ESM API</h3>
-      <div class="code-terminal">
-        <div class="terminal-bar">
-          <span class="dot dot-red"></span>
-          <span class="dot dot-yellow"></span>
-          <span class="dot dot-green"></span>
-          <span class="terminal-title">app.js — ESM Import</span>
-        </div>
-        <div class="terminal-content">
-<span class="cmd">import</span> { analyzeDependencies } <span class="cmd">from</span> <span class="success">"@keshavsoft/npm-source-explorer/v1"</span>;
-<span class="cmd">import</span> { verifyRepositories, cloneRepositories } <span class="cmd">from</span> <span class="success">"@keshavsoft/npm-source-explorer/v2"</span>;
-
-<span class="comment">// Analyze dependency tree in isolation</span>
-<span class="cmd">const</span> report = <span class="cmd">await</span> analyzeDependencies(<span class="success">"express"</span>);
-
-<span class="comment">// Verify Git release tags & reachability</span>
-<span class="cmd">const</span> verified = <span class="cmd">await</span> verifyRepositories(report);
-
-<span class="comment">// Clone all upstream repos</span>
-<span class="cmd">await</span> cloneRepositories(report, <span class="success">"./cloned-sources"</span>);
+          <p class="success">🔍 Exploring dependencies for "react"...</p>
+          <p class="success">📦 Found 28 packages (12 unique Git repositories).</p>
+          <p>  ⬇ [1/12] react -> cloned into ./react</p>
+          <p>  ⬇ [2/12] loose-envify -> cloned into ./loose-envify</p>
+          <p>  ⬇ [3/12] js-tokens -> cloned into ./js-tokens</p>
+          <p class="success">✨ Finished! Cloned 12 repositories into ./audit-react</p>
         </div>
       </div>
     </div>
@@ -586,7 +554,7 @@
       <div class="footer-grid">
         <div>
           <strong style="color: #fff;">@keshavsoft/npm-source-explorer</strong>
-          <p style="margin-top: 4px;">Inspect, verify, and clone npm source repositories.</p>
+          <p style="margin-top: 4px;">Download and clone upstream source repositories as siblings.</p>
         </div>
         <ul class="footer-links">
           <li><a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">npm Registry</a></li>
@@ -603,4 +571,3 @@
 
 </body>
 </html>
-
