@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>npm-source-explorer | Download & Inspect Upstream Source Repositories</title>
+  <meta name="description" content="One command to download and clone all upstream Git repositories behind any npm package as sibling folders in your workspace.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.75);
+      --bg-card-hover: rgba(31, 41, 55, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(59, 130, 246, 0.4);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.2);
+      --warning: #f59e0b;
+      --npm-red: #cb3837;
+      --radius: 12px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, Monaco, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 60%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+        linear-gradient(to bottom, #0a0e17, #070a10);
+      background-attachment: fixed;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    a:hover {
+      color: #60a5fa;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      background: rgba(10, 14, 23, 0.75);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 0;
+    }
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #fff;
+    }
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .nav-links a:hover {
+      color: #fff;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      border: 1px solid var(--border-color);
+    }
+    .btn-npm {
+      background: rgba(203, 56, 55, 0.15);
+      color: #f87171;
+      border-color: rgba(203, 56, 55, 0.35);
+    }
+    .btn-npm:hover {
+      background: var(--npm-red);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(203, 56, 55, 0.4);
+    }
+    .btn-github {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+    .btn-github:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 3.25rem;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p.lead {
+      max-width: 740px;
+      margin: 0 auto 36px;
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .cli-copy-box {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-accent);
+      padding: 14px 24px;
+      border-radius: var(--radius);
+      box-shadow: 0 0 25px var(--primary-glow);
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      color: #60a5fa;
+      user-select: all;
+    }
+    .cli-copy-box span.prompt {
+      color: var(--text-dim);
+      margin-right: 12px;
+    }
+
+    /* The Story Section */
+    .story-section {
+      padding: 60px 0;
+    }
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 40px;
+      max-width: 720px;
+    }
+    .story-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .story-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 32px;
+      position: relative;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .story-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+    .story-card .icon-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+    .icon-alert { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .icon-verify { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .icon-clone { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .story-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .story-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Sibling Layout Visual */
+    .sibling-visual {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-top: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: #c9d1d9;
+    }
+    .sibling-folder {
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    .sibling-desc {
+      color: var(--text-dim);
+    }
+
+    /* V3 Simplicity Breakdown */
+    .engine-section {
+      padding: 60px 0;
+      border-top: 1px solid var(--border-color);
+    }
+    .v3-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+    .v3-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .v3-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.15);
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    .v3-card h4 {
+      color: #fff;
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+    }
+    .v3-card p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    /* CLI Showcase */
+    .cli-section {
+      padding: 60px 0;
+      border-top: 1px solid var(--border-color);
+    }
+    .code-terminal {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 30px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+    .terminal-bar {
+      background: #161b22;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-left: 12px;
+    }
+    .terminal-content {
+      padding: 24px;
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      color: #e6edf3;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .terminal-content .cmd { color: #58a6ff; font-weight: 600; }
+    .terminal-content .comment { color: #8b949e; }
+    .terminal-content .success { color: #7ee787; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 50px 0 30px;
+      background: #070a10;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+    .footer-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+    }
+    .footer-links a:hover {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <div class="brand">
+        <div class="brand-icon">⌘</div>
+        <span>npm-source-explorer</span>
+      </div>
+      <div class="nav-links">
+        <a href="#story">The Story</a>
+        <a href="#v3">How It Works</a>
+        <a href="#cli">Quickstart</a>
+        <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" class="nav-btn btn-npm" target="_blank" rel="noopener">
+          📦 npm v1.2.3
+        </a>
+        <a href="https://github.com/keshavsoft/npm-source-explorer" class="nav-btn btn-github" target="_blank" rel="noopener">
+          🐙 GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container">
+      <div class="badge-pill">
+        ✨ One Simple Command • Sibling Source Repositories
+      </div>
+      <h1>Download Every Source.<br>Explore Side-By-Side.</h1>
+      <p class="lead">
+        No minified bundles. No 5,000-line JSON reports. Run one simple command, and all authentic upstream Git repositories behind any npm package are shallow-cloned as sibling folders right in your workspace.
+      </p>
+
+      <div class="hero-actions">
+        <div class="cli-copy-box">
+          <span class="prompt">$</span> npx @keshavsoft/npm-source-explorer &lt;package-name&gt;
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- The Story Section -->
+  <section class="story-section" id="story">
+    <div class="container">
+      <h2 class="section-title">The Story Behind The Tool</h2>
+      <p class="section-sub">
+        When auditing, learning, or debugging, developers don't want to dig through bundled code in <code>node_modules</code>.
+      </p>
+
+      <div class="story-grid">
+        <div class="story-card">
+          <div class="icon-badge icon-alert">📦</div>
+          <h3>Node Modules Is A Maze</h3>
+          <p>
+            Bundled code in <code>node_modules</code> is stripped of original comments, missing test suites, unreadable, and has zero Git history.
+          </p>
+        </div>
+
+        <div class="story-card">
+          <div class="icon-badge icon-verify">🔍</div>
+          <h3>Automated Discovery</h3>
+          <p>
+            <code>npm-source-explorer</code> inspects the target package and recursively follows every dependency edge to discover the real GitHub/Git repo behind each one.
+          </p>
+        </div>
+
+        <div class="story-card">
+          <div class="icon-badge icon-clone">🗂️</div>
+          <h3>Clean Sibling Folders</h3>
+          <p>
+            Every distinct repository is shallow-cloned directly into your current directory as a sibling folder. Open your IDE and search across the actual code.
+          </p>
+        </div>
+      </div>
+
+      <div class="sibling-visual">
+        <div style="color: #8b949e; margin-bottom: 12px;">// Your workspace after running: npx @keshavsoft/npm-source-explorer express</div>
+        <div>📁 <span class="sibling-folder">my-audit-folder/</span></div>
+        <div>├── 📁 <span class="sibling-folder">express/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Authentic source code with commits, tests, docs</span></div>
+        <div>├── 📁 <span class="sibling-folder">accepts/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
+        <div>├── 📁 <span class="sibling-folder">body-parser/</span> <span class="sibling-desc">&nbsp;&nbsp;← Sibling dependency repo</span></div>
+        <div>├── 📁 <span class="sibling-folder">cookie/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
+        <div>└── 📁 <span class="sibling-folder">qs/</span> <span class="sibling-desc">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Sibling dependency repo</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How V3 Works -->
+  <section class="engine-section" id="v3">
+    <div class="container">
+      <h2 class="section-title">Lean V3 Engine</h2>
+      <p class="section-sub">
+        Zero legacy bloat. Under 7 KB across 3 single-purpose modules.
+      </p>
+
+      <div class="v3-grid">
+        <div class="v3-card">
+          <span class="v3-badge">1. RESOLVE</span>
+          <h4>Arborist Discovery</h4>
+          <p>Recursively inspects dependencies in an isolated temporary OS folder and extracts declared Git URLs.</p>
+        </div>
+
+        <div class="v3-card">
+          <span class="v3-badge">2. NORMALIZE</span>
+          <h4>Repository Cleaning</h4>
+          <p>Converts varied repo configurations (<code>git+https</code>, SCP SSH, shortcuts) into canonical HTTPS endpoints.</p>
+        </div>
+
+        <div class="v3-card">
+          <span class="v3-badge">3. CLONE</span>
+          <h4>Sibling Cloner</h4>
+          <p>De-duplicates repositories and shallow-clones (<code>--depth 1</code>) them as clean sibling folders in your workspace.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLI Quickstart -->
+  <section class="cli-section" id="cli">
+    <div class="container">
+      <h2 class="section-title">Terminal Quickstart</h2>
+      <p class="section-sub">Open an empty folder and run:</p>
+
+      <div class="code-terminal">
+        <div class="terminal-bar">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="terminal-title">Terminal</span>
+        </div>
+        <div class="terminal-content">
+          <p class="comment"># Create an exploration folder</p>
+          <p><span class="cmd">mkdir</span> audit-react && <span class="cmd">cd</span> audit-react</p>
+          <br>
+          <p class="comment"># Download and clone all upstream source repositories</p>
+          <p><span class="cmd">npx @keshavsoft/npm-source-explorer</span> react</p>
+          <br>
+          <p class="success">🔍 Exploring dependencies for "react"...</p>
+          <p class="success">📦 Found 28 packages (12 unique Git repositories).</p>
+          <p>  ⬇ [1/12] react -> cloned into ./react</p>
+          <p>  ⬇ [2/12] loose-envify -> cloned into ./loose-envify</p>
+          <p>  ⬇ [3/12] js-tokens -> cloned into ./js-tokens</p>
+          <p class="success">✨ Finished! Cloned 12 repositories into ./audit-react</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <strong style="color: #fff;">@keshavsoft/npm-source-explorer</strong>
+          <p style="margin-top: 4px;">Download and clone upstream source repositories as siblings.</p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">npm Registry</a></li>
+          <li><a href="https://github.com/keshavsoft/npm-source-explorer">GitHub Repo</a></li>
+          <li><a href="https://github.com/keshavsoft/npm-source-explorer/issues">Issues</a></li>
+          <li><a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE">MIT License</a></li>
+        </ul>
+      </div>
+      <p style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 24px;">
+        Copyright © 2026 <a href="https://github.com/keshavsoft">KeshavSoft</a>. Released under the MIT License.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
