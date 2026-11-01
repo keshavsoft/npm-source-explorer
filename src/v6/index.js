@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * npm-source-explorer :: V5 Engine
+ * npm-source-explorer :: V6 Engine
  * ----------------------------------------------------------------------------
  * The Story of Source Exploration:
  *
@@ -154,13 +154,5 @@ export async function explore(packageSpec, destinationDirectory, options) {
   return explorer.explore(packageSpec, destinationDirectory);
 }
 
-// Named exports for modular access
-export {
-  resolvePackageTree,
-  normalizeRepoUrl,
-  toCloneUrl,
-  cloneRepo,
-  toSafeFolderName,
-  ExplorationStory
-};
+export default explore;
 
