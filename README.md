@@ -1,7 +1,7 @@
 # @keshavsoft/npm-source-explorer
 
 <p align="center">
-  <strong>Download and clone all upstream Git repositories behind any npm package as sibling folders in your workspace.</strong>
+  <strong>Download and shallow-clone all authentic upstream Git repositories behind any npm package as sibling folders in your workspace.</strong>
 </p>
 
 <p align="center">
@@ -16,6 +16,7 @@
   <a href="https://keshavsoft.github.io/npm-source-explorer/">🌐 <strong>Documentation Website</strong></a> •
   <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">📦 <strong>View on npm</strong></a> •
   <a href="https://github.com/keshavsoft/npm-source-explorer">🐙 <strong>GitHub Repository</strong></a> •
+  <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/STRUCTURE.md">📖 <strong>Architecture & Decoupling</strong></a> •
   <a href="https://github.com/keshavsoft/npm-source-explorer/issues">🐛 <strong>Report Issue</strong></a> •
   <a href="#quick-start">🚀 <strong>Quick Start</strong></a>
 </p>
@@ -24,117 +25,194 @@
 
 ## The Story: Why We Built This
 
-When inspecting or auditing an npm package, **reading `node_modules` is painful**:
-- Code inside `node_modules` is minified, bundled, stripped of comments, missing unit tests, and lacks Git history.
-- Reading a 5,000-line JSON dependency tree doesn't help you actually understand the code.
+### The `node_modules` Illusion
 
-**What developers really want is the real source code.**
+When inspecting, auditing, or learning from an open-source npm library, **opening `node_modules` is painful**:
+- **Artifacts, Not Source:** Code inside `node_modules` is bundled, minified, transpiled, and stripped of inline documentation.
+- **Missing Vital Context:** Test suites, benchmarks, documentation files, and original directory structures are excluded during package publish.
+- **Zero Commit History:** You cannot run `git log`, `git blame`, or inspect pull requests to understand *why* an architectural choice was made.
+- **The Browser Tab Nightmare:** To actually study the source of an ecosystem, developers manually search GitHub for 15+ individual repositories, locate their clone URLs, and run manual `git clone` commands one by one.
 
-`npm-source-explorer` solves this with a single command:
-1. It recursively resolves the target npm package and all of its dependencies.
-2. It discovers the authentic upstream Git/GitHub repository for each package.
-3. It shallow-clones (`--depth 1`) every distinct repository **side-by-side as sibling folders** right where you ran the command.
+### The Vision: Authentic Source, Side-by-Side
 
-Open your folder in VS Code or your IDE, and you can instantly explore, search, and step through the authentic source code of every package involved!
+**What developers truly want is the real source code.**
+
+`npm-source-explorer` turns any package name into a complete, authentic, side-by-side Git workspace with a single command:
+
+```bash
+npx @keshavsoft/npm-source-explorer express
+```
+
+In seconds, your workspace transforms:
 
 ```
-my-audit-folder/
-├── express/               <-- Authentic source code, commit history & tests
-├── accepts/               <-- Sibling dependency repo
-├── body-parser/           <-- Sibling dependency repo
-├── cookie/                <-- Sibling dependency repo
-└── qs/                    <-- Sibling dependency repo
+┌───────────────────────────────────┐       ┌───────────────────────────────────┐
+│     The node_modules Illusion     │       │     Authentic Sibling Reality     │
+│   (Minified, opaque, no tests)    │  ───► │  (Full Git histories, side-by-side)│
+└───────────────────────────────────┘       └───────────────────────────────────┘
+                                                           │
+        my-workspace/                                      │
+        ├── express/          ◄── Authentic upstream repo with tests & git history
+        ├── accepts/          ◄── Sibling dependency repo
+        ├── body-parser/      ◄── Sibling dependency repo
+        ├── cookie/           ◄── Sibling dependency repo
+        ├── finalhandler/     ◄── Sibling dependency repo
+        ├── send/             ◄── Sibling dependency repo
+        └── qs/               ◄── Sibling dependency repo
 ```
+
+Open your folder in VS Code (`code .`), and you can instantly search across the unminified code, step through breakpoints, and explore the authentic craftsmanship of every package involved!
 
 ---
 
 ## Quick Start
 
-Create an empty folder and run one simple command with `npx`:
+No installation required. Run directly with `npx`:
 
 ```bash
-# Go to your audit or exploration directory
+# 1. Create and enter your audit workspace
 mkdir audit-express && cd audit-express
 
-# Clone all upstream repositories as siblings
+# 2. Shallow-clone all upstream source repositories
 npx @keshavsoft/npm-source-explorer express
 ```
 
-You can also specify a custom destination folder:
+You can also target a custom directory:
 
 ```bash
-npx @keshavsoft/npm-source-explorer react ./react-sources
+npx @keshavsoft/npm-source-explorer react ./react-ecosystem
 ```
+
+---
+
+## Live Terminal Output
+
+Real-time progress shows the 4-act progression, package count, exact start timestamps, and elapsed clone durations:
+
+```
+$ npx @keshavsoft/npm-source-explorer json-renderers
+
+🔍 Exploring dependencies for "json-renderers"...
+📦 Found 26 packages (14 unique Git repositories).
+
+  [1/14] json-renderers (started 21:10:01)... ✔ cloned in 1.8s
+  [2/14] json-renderers-build (started 21:10:03)... ✔ cloned in 1.4s
+  [3/14] json-to-spec (started 21:10:05)... ✔ cloned in 1.2s
+  [4/14] json-transformer-funcs (started 21:10:07)... ✔ cloned in 1.5s (inferred from owner)
+  ...
+
+✨ Finished in 16.4s!
+📁 Destination: ./
+📊 Cloned: 14 | Skipped: 0 | Failed/Timed Out: 0
+```
+
+---
+
+## How It Works: The 4-Act Story Engine
+
+Under the hood, `npm-source-explorer` operates as a disciplined, 4-act narrative pipeline:
+
+```
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│     Act 1       │      │     Act 2       │      │     Act 3       │
+│ The Gatekeeper  │ ───► │The Cartographer │ ───► │  The Detective  │
+│(Validate Target)│      │(Map Tree via    │      │(Git Provenance &│
+│                 │      │   Arborist)     │      │   Deduplicate)  │
+└─────────────────┘      └─────────────────┘      └────────┬────────┘
+                                                           │
+                                                           ▼
+                                            ┌─────────────────────────────┐
+                                            │     SOURCE OF TRUTH         │
+                                            │  (Canonical Git Manifest)   │
+                                            └──────────────┬──────────────┘
+                                                           │
+                                                           ▼
+                                                  ┌─────────────────┐
+                                                  │     Act 4       │
+                                                  │   The Builder   │
+                                                  │(Shallow Sibling │
+                                                  │    Cloning)     │
+                                                  └─────────────────┘
+```
+
+1. **Act 1: The Gatekeeper (`src/v8/1-gatekeeper/`)**  
+   Validates the package specification, parses scopes (`@keshavsoft/pkg`), and establishes the root package identity and owner.
+2. **Act 2: The Cartographer (`src/v8/2-cartographer/`)**  
+   Spins up an ephemeral, isolated workspace in `os.tmpdir()` and uses `@npmcli/arborist` to compute the transitive dependency tree without executing install scripts or modifying disk.
+3. **Act 3: The Detective (`src/v8/3-detective/`)**  
+   Traces each dependency's authentic Git URL, canonicalizes diverse formats (`git+https`, SCP, SSH) into HTTPS remotes, applies **Smart Owner Fallback** for monorepo packages missing declared repository metadata, deduplicates shared repos, and outputs the **Source of Truth** manifest.
+4. **Act 4: The Builder (`src/v8/4-builder/`)**  
+   Takes the Source of Truth manifest and executes `git clone --depth 1` side-by-side as siblings. Armed with a 25-second fail-safe timeout, credential prompt suppression (`GIT_TERMINAL_PROMPT=0`), and cross-platform process tree termination (`taskkill /pid /T /F` on Windows) so hung helper processes never freeze your terminal.
+
+---
+
+## Programmatic Library API (ESM)
+
+Use the engine directly inside Node.js tools, audit scripts, or CI/CD pipelines:
+
+```javascript
+import { explore } from "@keshavsoft/npm-source-explorer";
+
+const summary = await explore("express", "./sources", {
+  timeoutMs: 25000,
+  onProgress: (event) => {
+    if (event.stage === "resolved") {
+      console.log(`Discovered ${event.totalPackages} packages across ${event.uniqueCount} repositories.`);
+    } else if (event.stage === "cloning-finish" && event.status === "cloned") {
+      console.log(`Cloned [${event.index}/${event.total}] ${event.name} in ${(event.durationMs / 1000).toFixed(1)}s`);
+    }
+  }
+});
+
+console.log(`Successfully prepared ${summary.clonedCount} sibling repositories in ${summary.destination}!`);
+```
+
+---
+
+## Architecture & The Decoupling Roadmap
+
+The boundary between **Acts 1–3** (Tree Discovery & Git Provenance) and **Act 4** (Workspace Cloning) is mediated by a strict, immutable JSON data contract:
+
+```json
+[
+  {
+    "name": "express",
+    "version": "4.18.2",
+    "repoUrl": "https://github.com/expressjs/express",
+    "cloneUrl": "https://github.com/expressjs/express.git",
+    "folder": "express",
+    "isInferred": false
+  }
+]
+```
+
+### Future Evolution: Two Decoupled Packages
+
+To honor the UNIX philosophy ("do one thing and do it well"), this codebase is designed to be split into two focused tools:
+
+| Module / Package | Responsibility | Dependencies |
+| :--- | :--- | :--- |
+| **`@keshavsoft/npm-repo-resolver`** | Discovers recursive npm trees & canonical Git remotes (The Source of Truth). | `@npmcli/arborist` (Zero Git dependency) |
+| **`@keshavsoft/git-sibling-cloner`** | Shallow-clones any list of Git repositories into sibling folders with fail-safes. | Native Node.js & Git (Zero npm dependency) |
+
+This decoupling allows developers to:
+1. **Audit & Dry-Run:** Generate a clean Git provenance manifest without downloading gigabytes of source code.
+2. **Reuse the Cloner:** Use the sibling cloner with any repository manifest (GitHub organizations, internal repos, Cargo/Go modules).
+3. **Compose with Pipes:**
+   ```bash
+   npx @keshavsoft/npm-repo-resolver express | npx @keshavsoft/git-sibling-cloner
+   ```
+4. **All-in-One CLI:** `@keshavsoft/npm-source-explorer` remains the flagship, unified experience.
+
+See [`STRUCTURE.md`](./STRUCTURE.md) for the complete architectural breakdown and design contracts.
 
 ---
 
 ## Requirements
 
 - **Node.js**: `>=20.0.0`
-- **npm**: Installed and available in PATH
-- **Git**: Installed and available in PATH
-
----
-
-## Global Installation (Optional)
-
-If you prefer installing it globally:
-
-```bash
-npm install -g @keshavsoft/npm-source-explorer
-
-# Now run it directly anywhere
-npm-source-explorer express
-```
-
----
-
-## Programmatic Library API (ESM)
-
-You can also use the library directly in your Node.js scripts or CI pipelines:
-
-```javascript
-import { explore, SourceExplorer } from "@keshavsoft/npm-source-explorer";
-
-const summary = await explore("express", "./sources", {
-  timeoutMs: 25000,
-  onProgress: (event) => {
-    if (event.stage === "cloning-finish" && event.status === "cloned") {
-      console.log(`Cloned [${event.index}/${event.total}] ${event.name} in ${(event.durationMs / 1000).toFixed(1)}s`);
-    }
-  }
-});
-
-console.log(`Successfully cloned ${summary.clonedCount} repositories!`);
-```
-
----
-
-## Codebase Architecture
-
-The codebase is lean, simple, and self-contained:
-
-```
-npm-source-explorer/
-├── cli/
-│   └── index.js             # Intuitive CLI runner with timing and status output
-├── docs/
-│   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
-│   └── index.html           # Clean storytelling documentation website
-├── src/
-│   ├── index.js             # Root export (routes to v8)
-│   └── v8/                  # The 4-Act Story-Driven Engine
-│       ├── 1-gatekeeper/    # Act 1: Input validation & package identity
-│       ├── 2-cartographer/  # Act 2: Isolated recursive dependency tree resolution
-│       ├── 3-detective/     # Act 3: Git provenance, smart owner fallback & deduplication
-│       ├── 4-builder/       # Act 4: Sibling cloning with fail-safes & tree-killing
-│       └── index.js         # The 35-line Story Orchestrator
-├── test/
-│   └── helpers.test.js      # Unit tests for URL normalizers & naming
-├── package.json             # Package configuration & metadata
-├── README.md                # Project documentation
-└── STRUCTURE.md             # Architecture overview
-```
+- **npm**: Installed and in `PATH`
+- **Git**: Installed and in `PATH`
 
 ---
 
@@ -157,13 +235,13 @@ npm run check
 
 ---
 
-## Links & Resources
+## Links & Ecosystem
 
 - 🌐 **Documentation Website**: [keshavsoft.github.io/npm-source-explorer](https://keshavsoft.github.io/npm-source-explorer/)
-- 📦 **npm Package**: [npmjs.com/package/@keshavsoft/npm-source-explorer](https://www.npmjs.com/package/@keshavsoft/npm-source-explorer)
-- 🐙 **GitHub Repository**: [github.com/keshavsoft/npm-source-explorer](https://github.com/keshavsoft/npm-source-explorer)
-- 🐛 **Issue Tracker**: [github.com/keshavsoft/npm-source-explorer/issues](https://github.com/keshavsoft/npm-source-explorer/issues)
-- 📖 **Architecture Guide**: [`STRUCTURE.md`](https://github.com/keshavsoft/npm-source-explorer/blob/main/STRUCTURE.md)
+- 📦 **npm Package**: [@keshavsoft/npm-source-explorer on npm](https://www.npmjs.com/package/@keshavsoft/npm-source-explorer)
+- 🐙 **GitHub Repository**: [keshavsoft/npm-source-explorer on GitHub](https://github.com/keshavsoft/npm-source-explorer)
+- 📖 **Architecture Guide**: [`STRUCTURE.md`](./STRUCTURE.md)
+- 🐛 **Issue Tracker**: [GitHub Issues](https://github.com/keshavsoft/npm-source-explorer/issues)
 
 ---
 

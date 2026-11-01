@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>npm-source-explorer</title>
+  <title>npm-source-explorer · Download Every Source. Explore Side-By-Side.</title>
+  <meta name="description" content="One command to recursively trace dependencies and shallow-clone all upstream Git repositories as sibling folders in your workspace.">
   <style>
     * {
       box-sizing: border-box;
@@ -15,8 +16,8 @@
       color: #1f2328;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       line-height: 1.6;
-      padding: 0;
       margin: 0;
+      padding: 0;
     }
     a {
       color: #0969da;
@@ -31,16 +32,32 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 900px;
+      max-width: 920px;
       margin: 0 auto;
     }
     .header-title {
       font-weight: 700;
       font-size: 1.15rem;
       color: #1f2328;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-title span.badge {
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #57606a;
+    }
+    .header-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
     .header-links a {
-      margin-left: 20px;
       font-size: 0.95rem;
       color: #656d76;
     }
@@ -48,12 +65,12 @@
       color: #0969da;
     }
     .container {
-      max-width: 860px;
+      max-width: 880px;
       margin: 0 auto;
       padding: 48px 24px 80px;
     }
     h1 {
-      font-size: 2.5rem;
+      font-size: 2.6rem;
       font-weight: 800;
       letter-spacing: -0.02em;
       margin-bottom: 16px;
@@ -70,24 +87,51 @@
       background: #f6f8fa;
       border: 1px solid #d0d7de;
       border-radius: 8px;
-      padding: 16px 20px;
+      padding: 18px 20px;
       font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       color: #0969da;
       margin-bottom: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .command-box code {
+      color: #0969da;
       user-select: all;
     }
-    .command-box span {
-      color: #656d76;
+    .command-box code span.prompt {
+      color: #8c959f;
       margin-right: 8px;
+      user-select: none;
+    }
+    .copy-btn {
+      background: #ffffff;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: #24292f;
+      font-family: inherit;
+      transition: background 0.15s ease;
+    }
+    .copy-btn:hover {
+      background: #f3f4f6;
     }
     h2 {
-      font-size: 1.6rem;
+      font-size: 1.65rem;
       font-weight: 700;
-      margin: 40px 0 16px;
+      margin: 44px 0 16px;
       color: #1f2328;
       border-bottom: 1px solid #eaeef2;
       padding-bottom: 8px;
+    }
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      color: #1f2328;
     }
     p {
       margin-bottom: 16px;
@@ -113,25 +157,87 @@
       color: #1f2328;
       margin: 20px 0 32px;
     }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 24px 0 36px;
+    }
+    .card {
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      padding: 20px;
+      background: #ffffff;
+    }
+    .card h4 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #0969da;
+    }
+    .card p {
+      font-size: 0.95rem;
+      color: #57606a;
+      margin-bottom: 0;
+      line-height: 1.5;
+    }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0 32px;
+      font-size: 0.98rem;
+    }
+    .comparison-table th, .comparison-table td {
+      border: 1px solid #d0d7de;
+      padding: 12px 16px;
+      text-align: left;
+    }
+    .comparison-table th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    .badge-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge-bad {
+      background: #ffebe9;
+      color: #cf222e;
+    }
+    .badge-good {
+      background: #dafbe1;
+      color: #1a7f37;
+    }
     .footer {
       border-top: 1px solid #d0d7de;
-      padding: 32px 24px;
+      padding: 36px 24px;
       text-align: center;
       color: #656d76;
-      font-size: 0.9rem;
-      max-width: 860px;
+      font-size: 0.92rem;
+      max-width: 880px;
       margin: 0 auto;
+    }
+    .footer a {
+      color: #0969da;
     }
   </style>
 </head>
 <body>
 
   <header class="header">
-    <div class="header-title">npm-source-explorer</div>
-    <div class="header-links">
-      <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">npm</a>
-      <a href="https://github.com/keshavsoft/npm-source-explorer">GitHub</a>
+    <div class="header-title">
+      npm-source-explorer
+      <span class="badge">v1.8.2</span>
     </div>
+    <nav class="header-links">
+      <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" target="_blank" rel="noopener">npm</a>
+      <a href="https://github.com/keshavsoft/npm-source-explorer" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/STRUCTURE.md" target="_blank" rel="noopener">Architecture</a>
+      <a href="https://github.com/keshavsoft/npm-source-explorer/issues" target="_blank" rel="noopener">Issues</a>
+    </nav>
   </header>
 
   <main class="container">
@@ -141,71 +247,145 @@
     </p>
 
     <div class="command-box">
-      <span>$</span> npx @keshavsoft/npm-source-explorer &lt;package-name&gt;
+      <code><span class="prompt">$</span>npx @keshavsoft/npm-source-explorer &lt;package-name&gt;</code>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('npx @keshavsoft/npm-source-explorer '); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy', 2000)">Copy</button>
     </div>
 
-    <h2>The Story</h2>
+    <h2>The Story: Why We Built This</h2>
     <p>
-      When auditing, debugging, or learning from open-source libraries, looking into <code>node_modules</code> is painful. The code is bundled, minified, stripped of original comments, missing unit tests, and has no commit history.
+      When auditing, debugging, or learning from open-source libraries, looking into <code>node_modules</code> is painful. The code is bundled, minified, stripped of original comments, missing unit tests, and devoid of commit history.
     </p>
     <p>
-      <strong>What developers actually want is the original source code.</strong>
+      <strong>What developers actually want is the authentic upstream source code.</strong>
     </p>
     <p>
-      Instead of searching for 20 different repository URLs on GitHub, you run one command in an empty folder:
+      Instead of manually hunting down 20 different repository URLs across GitHub, opening 20 browser tabs, and running 20 manual git clones, you run one command in an empty workspace:
     </p>
 
     <pre>
-mkdir audit-json && cd audit-json
-npx @keshavsoft/npm-source-explorer json-renderers
+mkdir audit-express && cd audit-express
+npx @keshavsoft/npm-source-explorer express
     </pre>
 
-    <h2>How It Works</h2>
-    <ul>
-      <li><strong>Recursive Discovery:</strong> Reads the package and recursively inspects every dependency down the tree in clean isolation.</li>
-      <li><strong>Repository Resolution:</strong> Finds the authentic GitHub or Git repository URL declared by each package's authors.</li>
-      <li><strong>Sibling Cloning:</strong> Shallow-clones (<code>--depth 1</code>) each unique repository directly into your workspace side-by-side as siblings.</li>
-      <li><strong>Fail-Safe Protection:</strong> Each clone operation includes a 25-second timeout and disables interactive terminal prompts so private or slow repositories never freeze your terminal.</li>
-    </ul>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>node_modules</th>
+          <th>npm-source-explorer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Code Quality</strong></td>
+          <td><span class="badge-tag badge-bad">Minified / Transpiled</span></td>
+          <td><span class="badge-tag badge-good">Authentic Original Source</span></td>
+        </tr>
+        <tr>
+          <td><strong>Unit Tests & Benchmarks</strong></td>
+          <td><span class="badge-tag badge-bad">Stripped Out</span></td>
+          <td><span class="badge-tag badge-good">100% Intact & Executable</span></td>
+        </tr>
+        <tr>
+          <td><strong>Git Commit History & PRs</strong></td>
+          <td><span class="badge-tag badge-bad">None</span></td>
+          <td><span class="badge-tag badge-good">Full Git Log & Authors</span></td>
+        </tr>
+        <tr>
+          <td><strong>Layout in Editor</strong></td>
+          <td><span class="badge-tag badge-bad">Deep Nested Tree</span></td>
+          <td><span class="badge-tag badge-good">Clean Side-by-Side Siblings</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>How It Works: The 4-Act Engine</h2>
+    <p>
+      The core architecture is built upon a clean 4-act story pipeline that separates <strong>dependency discovery</strong> from <strong>Git cloning</strong>:
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h4>Act 1: The Gatekeeper</h4>
+        <p>Validates target package specifications, parses scoped packages (<code>@scope/pkg</code>), and determines root package identity and owner.</p>
+      </div>
+      <div class="card">
+        <h4>Act 2: The Cartographer</h4>
+        <p>Spins up an isolated sandbox in <code>os.tmpdir()</code> and builds the full transitive dependency tree using <code>@npmcli/arborist</code>.</p>
+      </div>
+      <div class="card">
+        <h4>Act 3: The Detective</h4>
+        <p>Traces authentic Git remotes, applies smart owner fallback for missing repos, deduplicates, and produces the <strong>Source of Truth</strong> manifest.</p>
+      </div>
+      <div class="card">
+        <h4>Act 4: The Builder</h4>
+        <p>Executes fail-safe shallow cloning (<code>--depth 1</code>) side-by-side with 25s timeouts and process-tree termination (Windows taskkill).</p>
+      </div>
+    </div>
 
     <h2>Your Workspace Result</h2>
     <p>
-      After the command finishes, all repositories sit side-by-side as peers in your folder. Open your editor (<code>code .</code>) and search across the actual un-minified code:
+      After the command finishes, all upstream repositories sit side-by-side as peers in your directory. Open your editor (<code>code .</code>) and search across the actual un-minified code:
     </p>
 
     <pre>
 my-workspace/
-├── json-renderers/                       &lt;-- Root package source with commits & tests
-├── json-renderers-build/                 &lt;-- Sibling dependency repository
-├── json-to-spec/                         &lt;-- Sibling dependency repository
-├── json-transformer-funcs/               &lt;-- Sibling dependency repository
-├── json-transformer-funcs-primitive/     &lt;-- Sibling dependency repository
-└── json-transformer-funcs-one-dimension/ &lt;-- Sibling dependency repository
+├── express/          &lt;-- Authentic root repository with full tests & history
+├── accepts/          &lt;-- Sibling dependency repository
+├── body-parser/      &lt;-- Sibling dependency repository
+├── cookie/           &lt;-- Sibling dependency repository
+├── finalhandler/     &lt;-- Sibling dependency repository
+├── send/             &lt;-- Sibling dependency repository
+└── qs/               &lt;-- Sibling dependency repository
     </pre>
 
-    <h2>Terminal Output</h2>
-    <p>Real-time progress shows when each repository started and how long it took:</p>
+    <h2>Real-Time Terminal Output</h2>
+    <p>Detailed live updates show when each repository began and how many seconds it took:</p>
 
     <pre>
-$ npx @keshavsoft/npm-source-explorer json-renderers
+$ npx @keshavsoft/npm-source-explorer express
 
-🔍 Exploring dependencies for "json-renderers"...
-📦 Found 26 packages (14 unique Git repositories).
+🔍 Exploring dependencies for "express"...
+📦 Found 31 packages (22 unique Git repositories).
 
-  [1/14] json-renderers (started 07:50:01)... ✔ cloned in 1.8s
-  [2/14] json-renderers-build (started 07:50:03)... ✔ cloned in 1.4s
-  [3/14] json-to-spec (started 07:50:05)... ✔ cloned in 1.2s
-  [4/14] json-transformer-funcs (started 07:50:07)... ✔ cloned in 1.5s
+  [1/22] express (started 21:10:01)... ✔ cloned in 1.8s
+  [2/22] accepts (started 21:10:03)... ✔ cloned in 1.1s
+  [3/22] body-parser (started 21:10:04)... ✔ cloned in 1.3s
+  [4/22] cookie (started 21:10:06)... ✔ cloned in 0.9s
   ...
 
-✨ Finished in 18.2s!
+✨ Finished in 19.4s!
 📁 Destination: ./
-📊 Cloned: 14 | Skipped: 0 | Failed/Timed Out: 0
+📊 Cloned: 22 | Skipped: 0 | Failed/Timed Out: 0
     </pre>
+
+    <h2>Architecture & Decoupling</h2>
+    <p>
+      Acts 1–3 output a pure JSON <strong>Source of Truth</strong> manifest containing canonical Git remotes. Act 4 consumes that manifest to build the workspace.
+    </p>
+    <p>
+      This clean boundary allows the codebase to be used either as an all-in-one developer tool or split into two specialized packages:
+    </p>
+    <ul>
+      <li><strong><code>@keshavsoft/npm-repo-resolver</code></strong>: Discovers dependency trees and outputs the Source of Truth manifest.</li>
+      <li><strong><code>@keshavsoft/git-sibling-cloner</code></strong>: Takes any repository manifest and shallow-clones sibling workspaces with process fail-safes.</li>
+    </ul>
+    <p>
+      Read the detailed architectural specification in <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/STRUCTURE.md" target="_blank" rel="noopener">STRUCTURE.md</a>.
+    </p>
   </main>
 
   <footer class="footer">
-    <p>Released under the <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE">MIT License</a>. Created by <a href="https://github.com/keshavsoft">KeshavSoft</a>.</p>
+    <p>
+      Released under the <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.
+      Created by <a href="https://github.com/keshavsoft" target="_blank" rel="noopener">KeshavSoft</a>.
+    </p>
+    <p style="margin-top: 8px; font-size: 0.85rem;">
+      <a href="https://keshavsoft.github.io/npm-source-explorer/">Website</a> •
+      <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer">npm Package</a> •
+      <a href="https://github.com/keshavsoft/npm-source-explorer">GitHub Repository</a> •
+      <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/STRUCTURE.md">STRUCTURE.md</a>
+    </p>
   </footer>
 
 </body>
