@@ -94,12 +94,13 @@ npm-source-explorer express
 You can also use the library directly in your Node.js scripts or CI pipelines:
 
 ```javascript
-import { exploreAndClone } from "@keshavsoft/npm-source-explorer";
+import { explore, SourceExplorer } from "@keshavsoft/npm-source-explorer";
 
-const summary = await exploreAndClone("express", "./sources", {
+const summary = await explore("express", "./sources", {
+  timeoutMs: 25000,
   onProgress: (event) => {
-    if (event.stage === "cloning") {
-      console.log(`Cloning [${event.index}/${event.total}] ${event.name}`);
+    if (event.stage === "cloning-finish" && event.status === "cloned") {
+      console.log(`Cloned [${event.index}/${event.total}] ${event.name} in ${(event.durationMs / 1000).toFixed(1)}s`);
     }
   }
 });
@@ -116,18 +117,20 @@ The codebase is lean, simple, and self-contained:
 ```
 npm-source-explorer/
 ├── cli/
-│   └── index.js             # Simple, intuitive CLI runner
+│   └── index.js             # Intuitive CLI runner with timing and status output
 ├── docs/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
-│   └── index.html           # Interactive storytelling documentation website
+│   └── index.html           # Clean storytelling documentation website
 ├── src/
-│   ├── index.js             # Root export (routes to v3)
-│   └── v3/                  # Lean, Single-Purpose Engine
-│       ├── git.js           # Clean URL normalization & shallow git clone
+│   ├── index.js             # Root export (routes to v5)
+│   └── v5/                  # The 3-Chapter Story Engine
+│       ├── story.js         # Narrative progress & duration tracker
+│       ├── naming.js        # Safe sibling folder name normalizer
+│       ├── git.js           # Shallow clone with fail-safe timeouts & Windows tree-kill
 │       ├── resolver.js      # Isolated dependency resolution & repo URL discovery
-│       └── index.js         # exploreAndClone workflow orchestrator
+│       └── index.js         # SourceExplorer narrative orchestrator
 ├── test/
-│   └── helpers.test.js      # Unit tests for URL normalizers
+│   └── helpers.test.js      # Unit tests for URL normalizers & naming
 ├── package.json             # Package configuration & metadata
 ├── README.md                # Project documentation
 └── STRUCTURE.md             # Architecture overview

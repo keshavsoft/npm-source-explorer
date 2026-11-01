@@ -1,15 +1,17 @@
 /**
  * @keshavsoft/npm-source-explorer
  *
- * Root export pointing to V4 (featuring fail-safe timeouts and duration tracking).
+ * Root export pointing to V5 Engine:
+ * The story of discovering, mapping, and downloading upstream source repositories.
  */
 
 export {
-  exploreAndClone,
-  resolvePackageRepositories,
+  SourceExplorer,
+  explore,
+  resolvePackageTree,
   normalizeRepoUrl,
   toCloneUrl,
   cloneRepo,
-  analyzeDependencies,
-  cloneRepositories
-} from "./v4/index.js";
+  toSafeFolderName,
+  ExplorationStory
+} from "./v5/index.js";

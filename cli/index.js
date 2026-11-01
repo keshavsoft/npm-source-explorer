@@ -2,7 +2,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import { exploreAndClone } from "../src/v4/index.js";
+import { explore } from "../src/v5/index.js";
 
 const packageJson = JSON.parse(
   await fs.readFile(new URL("../package.json", import.meta.url), "utf8")
@@ -12,15 +12,16 @@ const VERSION = packageJson.version;
 function help() {
   console.log(`npm-source-explorer v${VERSION}
 
-Download and clone all upstream Git repositories for any npm package
-and its dependencies as sibling folders in your workspace.
+The Story:
+  Discover, map, and download all upstream Git repositories behind any npm package
+  as clean sibling folders right in your workspace.
 
 Usage:
-  npm-source-explorer <package-name> [destination-folder]
+  npx @keshavsoft/npm-source-explorer <package-name> [destination-folder]
 
 Examples:
-  npx @keshavsoft/npm-source-explorer express
-  npx @keshavsoft/npm-source-explorer react ./react-sources
+  npx @keshavsoft/npm-source-explorer json-renderers
+  npx @keshavsoft/npm-source-explorer express ./express-sources
 `);
 }
 
@@ -48,8 +49,8 @@ async function main() {
 
   console.log(`\n🔍 Exploring dependencies for "${packageSpec}"...`);
 
-  const summary = await exploreAndClone(packageSpec, targetDir, {
-    timeoutMs: 25000, // 25s fail-safe timeout per clone
+  const summary = await explore(packageSpec, targetDir, {
+    timeoutMs: 25000,
     onProgress: (event) => {
       if (event.stage === "resolved") {
         console.log(`📦 Found ${event.totalPackages} packages (${event.uniqueCount} unique Git repositories).\n`);
@@ -64,7 +65,7 @@ async function main() {
         } else if (event.status === "timed-out") {
           console.log(`⚠️ TIMED OUT after ${secs}s (skipped)`);
         } else if (event.status === "failed") {
-          console.log(`❌ failed (${event.detail})`);
+          console.log(`❌ failed (${event.error || "unknown"})`);
         }
       }
     }

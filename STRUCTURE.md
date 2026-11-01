@@ -12,9 +12,12 @@
 
 ## Architecture Philosophy
 
-1. **Keep It Simple & Focused:** The primary goal is to take any npm package and download the authentic upstream Git source code of it and all its dependencies as sibling folders in your workspace.
-2. **V3 is the Single Source of Truth:** `src/v3/` contains the lean, modern implementation. The CLI and root barrel export invoke V3 directly.
-3. **No Bloat, Zero Legacy Coupling:** V3 does not import or depend on V1 or V2. The entire V3 implementation is under 7 KB across 3 single-purpose files.
+1. **Keep It Simple & Focused:** The primary purpose is to take any npm package, discover all authentic upstream Git repositories behind it and its recursive dependencies, and clone them as sibling folders in your workspace.
+2. **V5 is the Single Source of Truth:** `src/v5/` contains the modern, narrative-driven engine. The CLI and root export invoke V5 directly.
+3. **The 3-Chapter Story:** Rather than a collection of arbitrary functions, V5 is organized around three explicit narrative chapters:
+   - **Chapter 1: Discovery** — Recursively resolves the full dependency tree in isolation.
+   - **Chapter 2: Provenance** — Extracts and deduplicates authentic Git repository remotes.
+   - **Chapter 3: Workspace** — Shallow-clones each upstream repository as sibling folders with fail-safe timeouts and Windows process-tree termination.
 
 ---
 
@@ -23,18 +26,20 @@
 ```
 npm-source-explorer/
 ├── cli/
-│   └── index.js             # CLI runner: handles npx <package-spec> [destination]
+│   └── index.js             # Intuitive CLI runner with timings and clear status output
 ├── docs/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
-│   └── index.html           # Interactive storytelling documentation website
+│   └── index.html           # Clean storytelling documentation website
 ├── src/
-│   ├── index.js             # Root export (routes to v3)
-│   └── v3/                  # Lean, Single-Purpose Engine
-│       ├── git.js           # Normalizes repository URLs and runs shallow git clone
-│       ├── resolver.js      # Uses Arborist to recursively discover dependency repo URLs
-│       └── index.js         # exploreAndClone workflow orchestrator
+│   ├── index.js             # Root export (routes directly to v5)
+│   └── v5/                  # The 3-Chapter Story Engine
+│       ├── story.js         # Narrative progress & duration tracker (ExplorationStory)
+│       ├── naming.js        # Safe sibling folder name normalizer
+│       ├── git.js           # Shallow clone with fail-safe timeouts & Windows tree-kill
+│       ├── resolver.js      # Isolated dependency resolution & repo URL discovery
+│       └── index.js         # SourceExplorer narrative orchestrator
 ├── test/
-│   └── helpers.test.js      # Unit tests for URL normalizers
+│   └── helpers.test.js      # Unit tests for URL normalizers & naming
 ├── package.json             # Package configuration & metadata
 ├── README.md                # Project documentation
 └── STRUCTURE.md             # Codebase layout and architecture reference
@@ -42,27 +47,29 @@ npm-source-explorer/
 
 ---
 
-## V3 Module Breakdown
+## V5 Module Breakdown
 
-### 1. `src/v3/resolver.js` (Dependency Discovery)
+### 1. `src/v5/resolver.js` (Chapter 1: Discovery)
 - Creates an isolated workspace in `os.tmpdir()` using `@npmcli/arborist`.
-- Recursively traverses the dependency tree to discover every package and its declared repository metadata.
-- Automatically cleans up the temporary directory when finished.
+- Recursively traverses the dependency tree to discover every package, its version, and declared repository metadata.
+- Automatically and safely cleans up the temporary directory when finished.
 
-### 2. `src/v3/git.js` (Git Normalization & Cloning)
+### 2. `src/v5/git.js` (Chapter 2 & 3: Git Remote & Shallow Clone)
 - Converts varied repository URL configurations (`git+https`, SCP-style `git@github.com:...`, SSH, object with `.url`) into canonical HTTPS endpoints.
 - Appends `.git` when necessary to prepare valid clone remotes.
-- Spawns `git clone --depth 1` to quickly pull the latest commit of each repository without bloating disk usage with full Git history.
+- Executes `git clone --depth 1` with a fail-safe timeout (default 25s).
+- On timeout, forcefully kills the child process tree (`taskkill /pid <PID> /T /F` on Windows) so hung helper processes (like `git-remote-https.exe`) never leave orphan background locks.
 
-### 3. `src/v3/index.js` (Pipeline Orchestrator)
-- Exposes `exploreAndClone(packageSpec, destinationDirectory, options)`.
-- De-duplicates repositories across dependencies.
-- Clones them side-by-side as siblings in the chosen directory (defaults to `process.cwd()`).
-- Skips existing folders safely and emits progress events.
+### 3. `src/v5/naming.js` (Sibling Folder Normalization)
+- Converts scoped package names (e.g. `@keshavsoft/npm-source-explorer`) into clean, cross-platform sibling folder names (`keshavsoft-npm-source-explorer`).
 
-### 4. `cli/index.js` (Command-Line Interface)
-- Enables `npx @keshavsoft/npm-source-explorer <package-name> [destination]`.
-- Prints real-time terminal progress with clean emoji indicators.
+### 4. `src/v5/story.js` (Narrative Reporter)
+- Tracks timestamps, elapsed durations, and chapter transitions.
+- Emits structured progress events to the CLI or programmatic API.
+
+### 5. `src/v5/index.js` (SourceExplorer Orchestrator)
+- Exposes `SourceExplorer` and `explore(packageSpec, destinationDirectory, options)`.
+- Implements the complete 3-chapter journey with clean, readable methods.
 
 ---
 
