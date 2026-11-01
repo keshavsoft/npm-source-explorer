@@ -135,13 +135,13 @@ Under the hood, `npm-source-explorer` operates as a disciplined, 4-act narrative
                                                   └─────────────────┘
 ```
 
-1. **Act 1: The Gatekeeper (`src/v8/1-gatekeeper/`)**  
-   Validates the package specification, parses scopes (`@keshavsoft/pkg`), and establishes the root package identity and owner.
-2. **Act 2: The Cartographer (`src/v8/2-cartographer/`)**  
-   Spins up an ephemeral, isolated workspace in `os.tmpdir()` and uses `@npmcli/arborist` to compute the transitive dependency tree without executing install scripts or modifying disk.
-3. **Act 3: The Detective (`src/v8/3-detective/`)**  
-   Traces each dependency's authentic Git URL, canonicalizes diverse formats (`git+https`, SCP, SSH) into HTTPS remotes, applies **Smart Owner Fallback** for monorepo packages missing declared repository metadata, deduplicates shared repos, and outputs the **Source of Truth** manifest.
-4. **Act 4: The Builder (`src/v8/4-builder/`)**  
+1. **Act 1: The Gatekeeper (Powered by [`npm-repo-resolver`](https://github.com/keshavsoft/npm-repo-resolver))**  
+   Validates the package specification, parses scopes (`@keshavsoft/pkg`), and establishes root package identity.
+2. **Act 2: The Cartographer (Powered by [`npm-repo-resolver`](https://github.com/keshavsoft/npm-repo-resolver))**  
+   Spins up an ephemeral, isolated workspace in `os.tmpdir()` and uses `@npmcli/arborist` to compute the transitive dependency tree without executing install scripts.
+3. **Act 3: The Detective (Powered by [`npm-repo-resolver`](https://github.com/keshavsoft/npm-repo-resolver))**  
+   Traces each dependency's authentic Git URL, canonicalizes formats (`git+https`, SCP, SSH) into HTTPS remotes, applies **Smart Owner Fallback** for monorepo packages, deduplicates, and outputs the **Source of Truth** manifest.
+4. **Act 4: The Builder (Powered by [`git-sibling-cloner`](https://github.com/keshavsoft/git-sibling-cloner))**  
    Takes the Source of Truth manifest and executes `git clone --depth 1` side-by-side as siblings. Armed with a 25-second fail-safe timeout, credential prompt suppression (`GIT_TERMINAL_PROMPT=0`), and cross-platform process tree termination (`taskkill /pid /T /F` on Windows) so hung helper processes never freeze your terminal.
 
 ---

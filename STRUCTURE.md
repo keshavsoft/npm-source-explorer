@@ -13,8 +13,8 @@
 ## Architecture Philosophy
 
 1. **Keep It Simple & Focused:** Take any npm package specification, discover all authentic upstream Git repositories behind it and its recursive dependencies, and shallow-clone them as sibling folders in your workspace.
-2. **V8 Story-Driven Engine as Single Source of Truth:** `src/v8/` implements the 4-act story pattern where each act is encapsulated in its own focused module, orchestrated by `src/v8/index.js` in fewer than 45 lines.
-3. **Decoupled Data Pipeline:** Acts 1–3 produce a verified, immutable **Source of Truth** manifest (JSON). Act 4 consumes this manifest to build the workspace. This separation forms the natural seam for multi-repo modularization.
+2. **V9 Engine as Decoupled Orchestrator:** `src/v9/` implements the modern orchestrator that imports `npm-repo-resolver` (dependency tree & Source of Truth) and `git-sibling-cloner` (sibling workspace builder).
+3. **Preserved History & Backward Compatibility:** `src/v8/` is retained for backwards compatibility, with subpath export `"./v8"` and root exports pointing to `"./v9"`.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -55,17 +55,15 @@ npm-source-explorer/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
 │   └── index.html           # Storytelling documentation website (GitHub Pages)
 ├── src/
-│   ├── index.js             # Root library export (re-exports v8 engine)
-│   └── v8/                  # The 4-Act Story Engine
-│       ├── 1-gatekeeper/    # Act 1: Input validation & package identity
-│       │   └── index.js
-│       ├── 2-cartographer/  # Act 2: Isolated dependency resolution via Arborist
-│       │   └── index.js
-│       ├── 3-detective/     # Act 3: Git provenance, URL normalization & fallback
-│       │   └── index.js
-│       ├── 4-builder/       # Act 4: Sibling cloning & fail-safe process cleanup
-│       │   └── index.js
-│       └── index.js         # The 40-line Story Orchestrator
+│   ├── index.js             # Root library export (re-exports v9 engine)
+│   ├── v8/                  # Historical V8 4-Act Story Engine (monolithic)
+│   │   ├── 1-gatekeeper/
+│   │   ├── 2-cartographer/
+│   │   ├── 3-detective/
+│   │   ├── 4-builder/
+│   │   └── index.js
+│   └── v9/                  # Modern V9 Decoupled Orchestrator
+│       └── index.js         # Composes npm-repo-resolver and git-sibling-cloner
 ├── test/
 │   └── helpers.test.js      # Unit tests for URL normalizers, scope parsing & naming
 ├── package.json             # Package configuration, npm metadata & exports
