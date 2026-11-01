@@ -13,11 +13,12 @@
 ## Architecture Philosophy
 
 1. **Keep It Simple & Focused:** The primary purpose is to take any npm package, discover all authentic upstream Git repositories behind it and its recursive dependencies, and clone them as sibling folders in your workspace.
-2. **V7 is the Single Source of Truth:** `src/v7/` contains the modern, narrative-driven engine with smart GitHub owner fallback. The CLI and root export invoke V7 directly.
-3. **The 3-Chapter Story:** Rather than a collection of arbitrary functions, V7 is organized around three explicit narrative chapters:
-   - **Chapter 1: Discovery** — Recursively resolves the full dependency tree in isolation.
-   - **Chapter 2: Provenance** — Extracts and deduplicates authentic Git repository remotes.
-   - **Chapter 3: Workspace** — Shallow-clones each upstream repository as sibling folders with fail-safe timeouts and Windows process-tree termination.
+2. **V8 is the Single Source of Truth:** `src/v8/` contains the modern, 4-act story-driven engine. Each act is separated into its own folder, while `index.js` acts strictly as the orchestrator.
+3. **The 4-Act Story:**
+   - **Act 1: The Gatekeeper (`1-gatekeeper/`)** — Validates the package specification and extracts package identity.
+   - **Act 2: The Cartographer (`2-cartographer/`)** — Recursively resolves the full dependency tree in isolation.
+   - **Act 3: The Detective (`3-detective/`)** — Extracts Git repository remotes, runs smart owner fallback for missing repos, and deduplicates.
+   - **Act 4: The Builder (`4-builder/`)** — Shallow-clones each upstream repository as sibling folders with fail-safe timeouts and Windows process-tree termination.
 
 ---
 
@@ -31,13 +32,13 @@ npm-source-explorer/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
 │   └── index.html           # Clean storytelling documentation website
 ├── src/
-│   ├── index.js             # Root export (routes directly to v7)
-│   └── v7/                  # The 3-Chapter Story Engine with Smart Owner Fallback
-│       ├── story.js         # Narrative progress & duration tracker (ExplorationStory)
-│       ├── naming.js        # Safe sibling folder name normalizer
-│       ├── git.js           # Shallow clone with fail-safe timeouts & Windows tree-kill
-│       ├── resolver.js      # Isolated dependency resolution & repo URL discovery
-│       └── index.js         # SourceExplorer narrative orchestrator
+│   ├── index.js             # Root export (routes directly to v8)
+│   └── v8/                  # The 4-Act Story Engine
+│       ├── 1-gatekeeper/    # Act 1: Validation & identity
+│       ├── 2-cartographer/  # Act 2: Isolated dependency resolution
+│       ├── 3-detective/     # Act 3: Git provenance & owner fallback
+│       ├── 4-builder/       # Act 4: Sibling cloning & fail-safes
+│       └── index.js         # Pure 35-line Story Orchestrator
 ├── test/
 │   └── helpers.test.js      # Unit tests for URL normalizers & naming
 ├── package.json             # Package configuration & metadata

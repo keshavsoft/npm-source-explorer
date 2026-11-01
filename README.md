@@ -122,13 +122,13 @@ npm-source-explorer/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
 │   └── index.html           # Clean storytelling documentation website
 ├── src/
-│   ├── index.js             # Root export (routes to v7)
-│   └── v7/                  # The 3-Chapter Story Engine with Smart Owner Fallback
-│       ├── story.js         # Narrative progress & duration tracker
-│       ├── naming.js        # Safe sibling folder name normalizer
-│       ├── git.js           # Shallow clone with fail-safe timeouts & Windows tree-kill
-│       ├── resolver.js      # Isolated dependency resolution & repo URL discovery
-│       └── index.js         # SourceExplorer narrative orchestrator
+│   ├── index.js             # Root export (routes to v8)
+│   └── v8/                  # The 4-Act Story-Driven Engine
+│       ├── 1-gatekeeper/    # Act 1: Input validation & package identity
+│       ├── 2-cartographer/  # Act 2: Isolated recursive dependency tree resolution
+│       ├── 3-detective/     # Act 3: Git provenance, smart owner fallback & deduplication
+│       ├── 4-builder/       # Act 4: Sibling cloning with fail-safes & tree-killing
+│       └── index.js         # The 35-line Story Orchestrator
 ├── test/
 │   └── helpers.test.js      # Unit tests for URL normalizers & naming
 ├── package.json             # Package configuration & metadata

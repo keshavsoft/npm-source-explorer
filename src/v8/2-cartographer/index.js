@@ -1,18 +1,17 @@
+/**
+ * Act 2: The Cartographer
+ * ----------------------------------------------------------------------------
+ * Recursively maps the complete dependency tree of the validated package
+ * inside an isolated temporary sandbox.
+ */
+
 import Arborist from "@npmcli/arborist";
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { normalizeRepoUrl } from "./git.js";
 
-/**
- * Resolves the full recursive dependency tree of an npm package in an isolated
- * temporary environment and extracts authentic Git source repositories.
- *
- * @param {string} packageSpec - e.g. "json-renderers" or "express@4"
- * @returns {Promise<Array<{ name: string, version: string|null, repoUrl: string|null }>>}
- */
-export async function resolvePackageTree(packageSpec) {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "npm-source-explorer-v7-"));
+export async function buildDependencyTree(packageSpec) {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "npm-source-explorer-v8-"));
   const workspacePath = path.join(tempDir, "workspace");
 
   try {
@@ -26,13 +25,17 @@ export async function resolvePackageTree(packageSpec) {
       loglevel: "silent"
     });
 
-    await arborist.reify({
-      add: [packageSpec],
-      audit: false,
-      fund: false,
-      progress: false,
-      save: false
-    });
+    try {
+      await arborist.reify({
+        add: [packageSpec],
+        audit: false,
+        fund: false,
+        progress: false,
+        save: false
+      });
+    } catch (err) {
+      throw new Error(`Package "${packageSpec}" could not be resolved on npm: ${err.message}`);
+    }
 
     const tree = await arborist.loadActual();
     const dependencies = [];
@@ -46,13 +49,13 @@ export async function resolvePackageTree(packageSpec) {
 
       const pkgName = node.package?.name ?? node.name;
       const pkgVersion = node.package?.version ?? null;
-      const repoUrl = normalizeRepoUrl(node.package?.repository);
+      const repository = node.package?.repository ?? null;
 
       if (pkgName) {
         dependencies.push({
           name: pkgName,
           version: pkgVersion,
-          repoUrl
+          repository
         });
       }
 
