@@ -14,4 +14,4 @@ export {
   cloneRepo,
   toSafeFolderName,
   ExplorationStory
-} from "./v5/index.js";
+} from "./v6/index.js";
