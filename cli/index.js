@@ -2,7 +2,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import { explore } from "../src/v7/index.js";
+import { explore } from "../src/v8/index.js";
 
 const packageJson = JSON.parse(
   await fs.readFile(new URL("../package.json", import.meta.url), "utf8")
@@ -59,9 +59,12 @@ async function main() {
       } else if (event.stage === "cloning-finish") {
         const secs = (event.durationMs / 1000).toFixed(1);
         if (event.status === "cloned") {
-          console.log(`✔ cloned in ${secs}s`);
+          const tag = event.isInferred ? " (inferred from owner)" : "";
+          console.log(`✔ cloned in ${secs}s${tag}`);
         } else if (event.status === "skipped") {
           console.log(`⏩ skipped (already exists)`);
+        } else if (event.status === "skipped-unlinked") {
+          console.log(`⏩ skipped (no repository found on GitHub)`);
         } else if (event.status === "timed-out") {
           console.log(`⚠️ TIMED OUT after ${secs}s (skipped)`);
         } else if (event.status === "failed") {

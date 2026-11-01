@@ -13,8 +13,8 @@
 ## Architecture Philosophy
 
 1. **Keep It Simple & Focused:** The primary purpose is to take any npm package, discover all authentic upstream Git repositories behind it and its recursive dependencies, and clone them as sibling folders in your workspace.
-2. **V5 is the Single Source of Truth:** `src/v5/` contains the modern, narrative-driven engine. The CLI and root export invoke V5 directly.
-3. **The 3-Chapter Story:** Rather than a collection of arbitrary functions, V5 is organized around three explicit narrative chapters:
+2. **V7 is the Single Source of Truth:** `src/v7/` contains the modern, narrative-driven engine with smart GitHub owner fallback. The CLI and root export invoke V7 directly.
+3. **The 3-Chapter Story:** Rather than a collection of arbitrary functions, V7 is organized around three explicit narrative chapters:
    - **Chapter 1: Discovery** — Recursively resolves the full dependency tree in isolation.
    - **Chapter 2: Provenance** — Extracts and deduplicates authentic Git repository remotes.
    - **Chapter 3: Workspace** — Shallow-clones each upstream repository as sibling folders with fail-safe timeouts and Windows process-tree termination.
@@ -31,8 +31,8 @@ npm-source-explorer/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
 │   └── index.html           # Clean storytelling documentation website
 ├── src/
-│   ├── index.js             # Root export (routes directly to v5)
-│   └── v5/                  # The 3-Chapter Story Engine
+│   ├── index.js             # Root export (routes directly to v7)
+│   └── v7/                  # The 3-Chapter Story Engine with Smart Owner Fallback
 │       ├── story.js         # Narrative progress & duration tracker (ExplorationStory)
 │       ├── naming.js        # Safe sibling folder name normalizer
 │       ├── git.js           # Shallow clone with fail-safe timeouts & Windows tree-kill

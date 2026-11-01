@@ -122,8 +122,8 @@ npm-source-explorer/
 │   ├── .nojekyll            # Prevents Jekyll build override on GitHub Pages
 │   └── index.html           # Clean storytelling documentation website
 ├── src/
-│   ├── index.js             # Root export (routes to v5)
-│   └── v5/                  # The 3-Chapter Story Engine
+│   ├── index.js             # Root export (routes to v7)
+│   └── v7/                  # The 3-Chapter Story Engine with Smart Owner Fallback
 │       ├── story.js         # Narrative progress & duration tracker
 │       ├── naming.js        # Safe sibling folder name normalizer
 │       ├── git.js           # Shallow clone with fail-safe timeouts & Windows tree-kill

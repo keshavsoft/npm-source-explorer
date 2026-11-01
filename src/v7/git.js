@@ -40,6 +40,19 @@ export function toCloneUrl(url) {
 }
 
 /**
+ * Extracts the GitHub owner (organization/user) from an HTTPS repository URL.
+ * e.g. "https://github.com/keshavsoft/json-renderers" -> "keshavsoft"
+ *
+ * @param {string} url
+ * @returns {string|null}
+ */
+export function extractGitHubOwner(url) {
+  if (!url || typeof url !== "string") return null;
+  const match = url.match(/^https?:\/\/(?:www\.)?github\.com\/([a-zA-Z0-9_-]+)(?:\/|$)/i);
+  return match ? match[1] : null;
+}
+
+/**
  * Forcefully terminates a child process and all its descendants.
  * Solves the Windows issue where git.exe spawns git-remote-https.exe.
  */

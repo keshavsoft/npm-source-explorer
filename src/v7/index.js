@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * npm-source-explorer :: V6 Engine
+ * npm-source-explorer :: V7 Engine
  * ----------------------------------------------------------------------------
  * The Story of Source Exploration:
  *
@@ -11,7 +11,7 @@
  *
  * The Three Chapters:
  *   Chapter 1: Discovery  - Recursively map every dependency in the tree.
- *   Chapter 2: Provenance - Extract and deduplicate authentic Git repositories.
+ *   Chapter 2: Provenance - Extract, deduplicate, and smart-infer Git repositories.
  *   Chapter 3: Workspace  - Download each source repository side-by-side.
  * ============================================================================
  */
@@ -19,7 +19,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import { resolvePackageTree } from "./resolver.js";
-import { normalizeRepoUrl, toCloneUrl, cloneRepo } from "./git.js";
+import { normalizeRepoUrl, toCloneUrl, cloneRepo, extractGitHubOwner } from "./git.js";
 import { toSafeFolderName } from "./naming.js";
 import { ExplorationStory } from "./story.js";
 
@@ -51,7 +51,7 @@ export class SourceExplorer {
     story.startResolving();
     const dependencies = await this.discoverTree(packageSpec);
 
-    // Chapter 2: Identify and deduplicate authentic Git repositories
+    // Chapter 2: Identify and deduplicate authentic Git repositories (with smart fallback)
     const repositories = this.identifyRepositories(dependencies);
     story.resolvedTree(dependencies, repositories);
 
@@ -69,21 +69,42 @@ export class SourceExplorer {
   }
 
   /**
-   * Chapter 2: Extracts unique Git repositories from the resolved dependency tree.
+   * Chapter 2: Extracts unique Git repositories.
+   * Includes smart GitHub owner fallback for packages that omitted "repository" on npm.
    */
   identifyRepositories(dependencies) {
+    // 1. Detect primary GitHub owner from declared repositories or scoped package
+    let detectedOwner = null;
+    for (const pkg of dependencies) {
+      if (pkg.repoUrl) {
+        detectedOwner = extractGitHubOwner(pkg.repoUrl);
+        if (detectedOwner) break;
+      }
+    }
+
     const unique = new Map();
 
     for (const pkg of dependencies) {
-      if (!pkg.repoUrl) continue;
+      let repoUrl = pkg.repoUrl;
+      let isInferred = false;
 
-      if (!unique.has(pkg.repoUrl)) {
-        unique.set(pkg.repoUrl, {
+      // Smart fallback: if package omitted "repository" in package.json, infer from owner
+      if (!repoUrl && detectedOwner) {
+        const cleanName = toSafeFolderName(pkg.name);
+        repoUrl = `https://github.com/${detectedOwner}/${cleanName}`;
+        isInferred = true;
+      }
+
+      if (!repoUrl) continue;
+
+      if (!unique.has(repoUrl)) {
+        unique.set(repoUrl, {
           name: pkg.name,
           version: pkg.version,
-          repoUrl: pkg.repoUrl,
-          cloneUrl: toCloneUrl(pkg.repoUrl),
-          folder: toSafeFolderName(pkg.name)
+          repoUrl,
+          cloneUrl: toCloneUrl(repoUrl),
+          folder: toSafeFolderName(pkg.name),
+          isInferred
         });
       }
     }
@@ -126,12 +147,26 @@ export class SourceExplorer {
         const durationMs = cloneResult.durationMs ?? (Date.now() - itemStart);
         story.finishClone(index, repositories.length, repo, {
           status: "cloned",
-          durationMs
+          durationMs,
+          isInferred: repo.isInferred
         });
         results.push({ ...repo, status: "cloned", durationMs });
       } catch (error) {
         const durationMs = Date.now() - itemStart;
+        const isNotFound = /not found|could not read/i.test(error.message);
         const isTimeout = error.message.includes("timed out");
+
+        // If an inferred repo didn't exist on GitHub, skip gracefully without failing the run
+        if (repo.isInferred && isNotFound) {
+          story.finishClone(index, repositories.length, repo, {
+            status: "skipped-unlinked",
+            durationMs,
+            detail: "not found on GitHub"
+          });
+          results.push({ ...repo, status: "skipped-unlinked", durationMs, detail: "not found on GitHub" });
+          continue;
+        }
+
         const status = isTimeout ? "timed-out" : "failed";
         story.finishClone(index, repositories.length, repo, {
           status,
@@ -155,4 +190,3 @@ export async function explore(packageSpec, destinationDirectory, options) {
 }
 
 export default explore;
-

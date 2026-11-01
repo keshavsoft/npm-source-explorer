@@ -62,6 +62,8 @@ export class ExplorationStory {
       repoUrl: repo.repoUrl,
       status: outcome.status,
       durationMs: outcome.durationMs,
+      isInferred: Boolean(outcome.isInferred || repo.isInferred),
+      detail: outcome.detail || null,
       error: outcome.error || null
     };
 
@@ -77,7 +79,7 @@ export class ExplorationStory {
   finish(results) {
     const totalDurationMs = Date.now() - this.startedAt;
     const clonedCount = results.filter((r) => r.status === "cloned").length;
-    const skippedCount = results.filter((r) => r.status === "skipped").length;
+    const skippedCount = results.filter((r) => r.status === "skipped" || r.status === "skipped-unlinked").length;
     const failedCount = results.filter((r) => r.status === "failed" || r.status === "timed-out").length;
 
     const summary = {

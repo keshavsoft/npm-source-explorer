@@ -12,7 +12,7 @@ import { normalizeRepoUrl } from "./git.js";
  * @returns {Promise<Array<{ name: string, version: string|null, repoUrl: string|null }>>}
  */
 export async function resolvePackageTree(packageSpec) {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "npm-source-explorer-v6-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "npm-source-explorer-v7-"));
   const workspacePath = path.join(tempDir, "workspace");
 
   try {

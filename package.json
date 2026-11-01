@@ -1,12 +1,12 @@
 {
   "name": "@keshavsoft/npm-source-explorer",
-  "version": "1.7.1",
+  "version": "1.8.1",
   "description": "Download and clone all upstream Git repositories behind any npm package as sibling folders in your workspace.",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./v6": "./src/v6/index.js"
+    "./v7": "./src/v7/index.js"
   },
   "bin": {
     "npm-source-explorer": "cli/index.js"
@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "test": "node --test",
-    "check": "node --check cli/index.js && node --check src/index.js && node --check src/v6/index.js"
+    "check": "node --check cli/index.js && node --check src/index.js && node --check src/v7/index.js"
   },
   "repository": {
     "type": "git",
