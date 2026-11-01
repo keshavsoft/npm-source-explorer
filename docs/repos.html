@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ecosystem & Repositories · npm-source-explorer</title>
+  <meta name="description" content="A complete guide to the decoupled KeshavSoft ecosystem: npm-repo-resolver, git-sibling-cloner, and npm-source-explorer.">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #ffffff;
+      color: #1f2328;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+    a {
+      color: #0969da;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .header {
+      border-bottom: 1px solid #d0d7de;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .header-title {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #1f2328;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-title span.badge {
+      background: #ddf4ff;
+      border: 1px solid #54aeff;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #0969da;
+    }
+    .header-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-links a {
+      font-size: 0.95rem;
+      color: #656d76;
+    }
+    .header-links a:hover, .header-links a.active {
+      color: #0969da;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      color: #1f2328;
+      line-height: 1.2;
+    }
+    p.lead {
+      font-size: 1.25rem;
+      color: #656d76;
+      margin-bottom: 36px;
+      line-height: 1.5;
+    }
+    h2 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      margin: 44px 0 16px;
+      color: #1f2328;
+      border-bottom: 1px solid #eaeef2;
+      padding-bottom: 8px;
+    }
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 28px 0 12px;
+      color: #1f2328;
+    }
+    p {
+      margin-bottom: 16px;
+      font-size: 1.05rem;
+      color: #1f2328;
+    }
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: #1f2328;
+      margin: 16px 0 28px;
+    }
+    .pipeline-diagram {
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0 44px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+    .repo-card {
+      border: 1px solid #d0d7de;
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 24px;
+      background: #ffffff;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .repo-card:hover {
+      border-color: #0969da;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .repo-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .repo-card-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #1f2328;
+    }
+    .repo-card-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .tag-resolver {
+      background: #dafbe1;
+      color: #1a7f37;
+    }
+    .tag-cloner {
+      background: #ddf4ff;
+      color: #0969da;
+    }
+    .tag-suite {
+      background: #fbefff;
+      color: #8250df;
+    }
+    .repo-links {
+      display: flex;
+      gap: 14px;
+      margin: 16px 0 8px;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    .repo-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 28px 0 36px;
+      font-size: 0.96rem;
+    }
+    .comparison-table th, .comparison-table td {
+      border: 1px solid #d0d7de;
+      padding: 12px 16px;
+      text-align: left;
+    }
+    .comparison-table th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    .badge-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+    }
+    .footer {
+      border-top: 1px solid #d0d7de;
+      padding: 36px 24px;
+      text-align: center;
+      color: #656d76;
+      font-size: 0.92rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    .footer a {
+      color: #0969da;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-title">
+      <a href="index.html" style="color: inherit; text-decoration: none;">npm-source-explorer</a>
+      <span class="badge">Ecosystem Hub</span>
+    </div>
+    <nav class="header-links">
+      <a href="index.html">Overview</a>
+      <a href="repos.html" class="active">Repositories</a>
+      <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/STRUCTURE.md" target="_blank" rel="noopener">STRUCTURE.md</a>
+      <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" target="_blank" rel="noopener">npm</a>
+      <a href="https://github.com/keshavsoft/npm-source-explorer" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>The Decoupled Ecosystem</h1>
+    <p class="lead">
+      A clear look at the three dedicated repositories, how they relate, and how they compose together to discover, resolve, and clone upstream open-source code.
+    </p>
+
+    <h2>The Architectural Story: Why Decouple?</h2>
+    <p>
+      Originally, discovering dependency trees and cloning Git repositories were combined in a single package. But examining the pipeline revealed two distinct, powerful responsibilities:
+    </p>
+    <ul>
+      <li><strong>Discovery & Provenance:</strong> Takes a package spec, builds the tree via Arborist in an isolated sandbox, normalizes Git URLs, and produces a verified <strong>Source of Truth</strong> manifest. <em>Zero Git CLI required.</em></li>
+      <li><strong>Workspace Builder:</strong> Takes any list of Git repositories, shallow-clones them as sibling folders, terminates hung child processes with <code>taskkill</code>, and suppresses interactive prompts. <em>Zero npm required.</em></li>
+    </ul>
+
+    <p>
+      By separating them into dedicated micro-repositories, developers can use each tool on its own or orchestrate them seamlessly through the flagship suite.
+    </p>
+
+    <div class="pipeline-diagram">
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                        THE KESHAVSOFT REPOSITORY ECOSYSTEM                    │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+  1. DISCOVERY & PROVENANCE (The Source of Truth)
+  ┌─────────────────────────────────────────────────────────┐
+  │  npm-repo-resolver                                      │
+  │  • Recursively resolves dependency tree via Arborist    │
+  │  • Normalizes git+https, SSH, and SCP remotes           │
+  │  • Smart owner fallback for monorepo packages           │
+  │  • Zero Git binary dependency                           │
+  └────────────────────────────┬────────────────────────────┘
+                               │
+                               ▼ Produces JSON Manifest
+  ┌─────────────────────────────────────────────────────────┐
+  │  THE SOURCE OF TRUTH (JSON Manifest)                    │
+  │  [ { name, repoUrl, cloneUrl, folder, isInferred } ]    │
+  └────────────────────────────┬────────────────────────────┘
+                               │
+                               ▼ Consumes JSON Manifest
+  2. WORKSPACE BUILDER (Fail-Safe Git Cloning)
+  ┌─────────────────────────────────────────────────────────┐
+  │  git-sibling-cloner                                     │
+  │  • Shallow-clones repositories side-by-side as siblings │
+  │  • 25-second fail-safe timeout                          │
+  │  • Windows process-tree termination (taskkill /pid /T)  │
+  │  • Zero npm coupling (works with ANY git repository)    │
+  └─────────────────────────────────────────────────────────┘
+                               ▲
+                               │
+  3. THE UNIFIED SUITE (All-in-One CLI)
+  ┌─────────────────────────────────────────────────────────┐
+  │  @keshavsoft/npm-source-explorer (V9 Engine)            │
+  │  • Imports: npm-repo-resolver + git-sibling-cloner      │
+  │  • One-command end-to-end developer experience          │
+  │  • npx @keshavsoft/npm-source-explorer &lt;pkg&gt;            │
+  └─────────────────────────────────────────────────────────┘
+    </div>
+
+    <h2>The 3 Repositories</h2>
+
+    <!-- Repo 1: npm-repo-resolver -->
+    <div class="repo-card">
+      <div class="repo-card-header">
+        <div>
+          <div class="repo-card-title">1. npm-repo-resolver</div>
+          <p style="margin: 4px 0 0; color: #57606a; font-size: 0.95rem;">
+            Dependency Tree & Git Provenance Engine
+          </p>
+        </div>
+        <span class="repo-card-tag tag-resolver">The Source of Truth</span>
+      </div>
+
+      <p>
+        Recursively traces any npm package down its entire transitive dependency tree and extracts canonical upstream Git repository remotes. Outputs an immutable, deduplicated JSON manifest without cloning files.
+      </p>
+
+      <pre>
+# Quick CLI Usage:
+npx npm-repo-resolver express
+
+# Formatted Table Output:
+npx npm-repo-resolver express --table
+
+# Count Unique Repositories:
+npx npm-repo-resolver express --count
+      </pre>
+
+      <div class="repo-links">
+        <a href="https://www.npmjs.com/package/npm-repo-resolver" target="_blank" rel="noopener">📦 npm Package (v1.0.1)</a>
+        <a href="https://github.com/keshavsoft/npm-repo-resolver" target="_blank" rel="noopener">🐙 GitHub Repository</a>
+        <a href="https://keshavsoft.github.io/npm-repo-resolver/" target="_blank" rel="noopener">🌐 Live Documentation</a>
+      </div>
+    </div>
+
+    <!-- Repo 2: git-sibling-cloner -->
+    <div class="repo-card">
+      <div class="repo-card-header">
+        <div>
+          <div class="repo-card-title">2. git-sibling-cloner</div>
+          <p style="margin: 4px 0 0; color: #57606a; font-size: 0.95rem;">
+            Fail-Safe Sibling Workspace Builder
+          </p>
+        </div>
+        <span class="repo-card-tag tag-cloner">The Builder</span>
+      </div>
+
+      <p>
+        Takes any list of Git repositories (from npm, GitHub orgs, Cargo, Python, or internal manifests) and shallow-clones (<code>--depth 1</code>) them side-by-side as siblings. Armed with 25s timeouts and Windows <code>taskkill</code> tree-killing.
+      </p>
+
+      <pre>
+# Quick CLI Usage:
+npx git-sibling-cloner manifest.json ./workspace
+
+# Piped from Standard Input:
+cat manifest.json | npx git-sibling-cloner ./workspace
+      </pre>
+
+      <div class="repo-links">
+        <a href="https://www.npmjs.com/package/git-sibling-cloner" target="_blank" rel="noopener">📦 npm Package (v1.0.1)</a>
+        <a href="https://github.com/keshavsoft/git-sibling-cloner" target="_blank" rel="noopener">🐙 GitHub Repository</a>
+        <a href="https://keshavsoft.github.io/git-sibling-cloner/" target="_blank" rel="noopener">🌐 Live Documentation</a>
+      </div>
+    </div>
+
+    <!-- Repo 3: npm-source-explorer -->
+    <div class="repo-card">
+      <div class="repo-card-header">
+        <div>
+          <div class="repo-card-title">3. @keshavsoft/npm-source-explorer</div>
+          <p style="margin: 4px 0 0; color: #57606a; font-size: 0.95rem;">
+            Flagship Suite & Orchestrator (V9)
+          </p>
+        </div>
+        <span class="repo-card-tag tag-suite">The Suite</span>
+      </div>
+
+      <p>
+        The flagship developer tool that orchestrates both <code>npm-repo-resolver</code> and <code>git-sibling-cloner</code> in a single seamless command. Turns any package into a peer-to-peer sibling workspace ready for code auditing in your editor.
+      </p>
+
+      <pre>
+# One-Command Full Exploration:
+npx @keshavsoft/npm-source-explorer express
+
+# Custom Workspace Folder:
+npx @keshavsoft/npm-source-explorer react ./react-sources
+      </pre>
+
+      <div class="repo-links">
+        <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" target="_blank" rel="noopener">📦 npm Package (v1.9.0)</a>
+        <a href="https://github.com/keshavsoft/npm-source-explorer" target="_blank" rel="noopener">🐙 GitHub Repository</a>
+        <a href="https://keshavsoft.github.io/npm-source-explorer/">🌐 Live Documentation</a>
+      </div>
+    </div>
+
+    <h2>Side-by-Side Comparison</h2>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>npm-repo-resolver</th>
+          <th>git-sibling-cloner</th>
+          <th>npm-source-explorer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Primary Role</strong></td>
+          <td>Dependency discovery & Git provenance</td>
+          <td>Shallow workspace cloner</td>
+          <td>All-in-one suite orchestrator</td>
+        </tr>
+        <tr>
+          <td><strong>Input</strong></td>
+          <td>Package spec (e.g. <code>express</code>)</td>
+          <td>JSON repo manifest or stdin</td>
+          <td>Package spec (e.g. <code>express</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Output</strong></td>
+          <td>JSON Source of Truth stream / table</td>
+          <td>Cloned sibling folders on disk</td>
+          <td>Cloned sibling folders on disk</td>
+        </tr>
+        <tr>
+          <td><strong>Requires Git?</strong></td>
+          <td><span class="badge-pill">No (Zero Git)</span></td>
+          <td><span class="badge-pill">Yes</span></td>
+          <td><span class="badge-pill">Yes</span></td>
+        </tr>
+        <tr>
+          <td><strong>Requires npm?</strong></td>
+          <td><span class="badge-pill">Yes (Arborist)</span></td>
+          <td><span class="badge-pill">No (Zero npm)</span></td>
+          <td><span class="badge-pill">Yes</span></td>
+        </tr>
+        <tr>
+          <td><strong>Best For</strong></td>
+          <td>Auditing, SBOMs, dry-runs, CI checks</td>
+          <td>Cloning GitHub orgs, Cargo, multi-repos</td>
+          <td>Fast single-command auditing</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>The UNIX Pipe Story</h2>
+    <p>
+      Because <code>npm-repo-resolver</code> writes its progress to <code>stderr</code> and pure JSON to <code>stdout</code>, and <code>git-sibling-cloner</code> reads from <code>stdin</code>, you can pipe them directly across your terminal:
+    </p>
+
+    <pre>
+# Composing the two independent micro-tools via UNIX pipes:
+npx npm-repo-resolver express | npx git-sibling-cloner ./my-sources
+    </pre>
+
+    <p>
+      Or run the flagship all-in-one command:
+    </p>
+
+    <pre>
+npx @keshavsoft/npm-source-explorer express
+    </pre>
+  </main>
+
+  <footer class="footer">
+    <p>
+      Released under the <a href="https://github.com/keshavsoft/npm-source-explorer/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.
+      Created by <a href="https://github.com/keshavsoft" target="_blank" rel="noopener">KeshavSoft</a>.
+    </p>
+    <p style="margin-top: 8px; font-size: 0.85rem;">
+      <a href="index.html">Overview</a> •
+      <a href="repos.html">Repositories Guide</a> •
+      <a href="https://www.npmjs.com/package/npm-repo-resolver" target="_blank" rel="noopener">npm-repo-resolver</a> •
+      <a href="https://www.npmjs.com/package/git-sibling-cloner" target="_blank" rel="noopener">git-sibling-cloner</a> •
+      <a href="https://www.npmjs.com/package/@keshavsoft/npm-source-explorer" target="_blank" rel="noopener">npm-source-explorer</a>
+    </p>
+  </footer>
+
+</body>
+</html>
+
