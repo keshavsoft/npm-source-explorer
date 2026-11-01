@@ -125,29 +125,37 @@ This strict JSON contract allows the discovery pipeline (Acts 1–3) to be fully
 
 ---
 
-## Decoupling Blueprint: Dividing into Two Repositories
+## Decoupled Architecture: The 3 Repositories
 
-Because Acts 1–3 and Act 4 share only this pure data contract, the repository is ready to be split cleanly into two independent packages/repositories:
+The codebase is officially decoupled into two standalone packages and this orchestrating suite:
 
-### 1. Repository A: `@keshavsoft/npm-repo-resolver` (The Source of Truth)
+### 1. Repository A: [`npm-repo-resolver`](https://github.com/keshavsoft/npm-repo-resolver) (The Source of Truth)
 - **Scope:** Acts 1, 2, and 3 (`1-gatekeeper`, `2-cartographer`, `3-detective`).
 - **Dependencies:** `@npmcli/arborist`. Zero Git or child process dependencies.
 - **Output:** Outputs the Source of Truth JSON manifest.
-- **CLI:** `npx @keshavsoft/npm-repo-resolver express` (prints JSON or Markdown table).
-- **Use Cases:** Fast dependency auditing, security SBOM analysis, license checking, CI checks without downloading gigabytes of source code.
+- **CLI:** `npx npm-repo-resolver express` (prints JSON or Markdown table).
+- **Docs:** [keshavsoft.github.io/npm-repo-resolver](https://keshavsoft.github.io/npm-repo-resolver/)
+- **npm:** [npmjs.com/package/npm-repo-resolver](https://www.npmjs.com/package/npm-repo-resolver)
 
-### 2. Repository B: `@keshavsoft/git-sibling-cloner` (The Workspace Builder)
+### 2. Repository B: [`git-sibling-cloner`](https://github.com/keshavsoft/git-sibling-cloner) (The Workspace Builder)
 - **Scope:** Act 4 (`4-builder`).
 - **Dependencies:** Node.js native (`child_process`, `fs`). Zero npm or Arborist dependencies.
 - **Input:** Any array of `{ cloneUrl, folder }` or path to a JSON manifest.
-- **CLI:** `npx @keshavsoft/git-sibling-cloner manifest.json` or reading from standard input.
-- **Use Cases:** Generic sibling cloner for GitHub teams, monorepos, Cargo/Go dependencies, or any custom repository list.
+- **CLI:** `npx git-sibling-cloner manifest.json` or reading from standard input.
+- **Docs:** [keshavsoft.github.io/git-sibling-cloner](https://keshavsoft.github.io/git-sibling-cloner/)
+- **npm:** [npmjs.com/package/git-sibling-cloner](https://www.npmjs.com/package/git-sibling-cloner)
 
-### 3. Orchestrator / Top-Level CLI: `@keshavsoft/npm-source-explorer`
-- Stays as the flagship developer tool:
+### 3. Orchestrator / Top-Level CLI: [`@keshavsoft/npm-source-explorer`](https://github.com/keshavsoft/npm-source-explorer)
+- Powers the unified all-in-one developer experience:
   ```bash
   # All-in-one developer experience:
   npx @keshavsoft/npm-source-explorer <package-name>
+  
+  # Or via UNIX composability:
+  npx npm-repo-resolver express | npx git-sibling-cloner ./sources
+  ```
+- **Docs:** [keshavsoft.github.io/npm-source-explorer](https://keshavsoft.github.io/npm-source-explorer/)
+- **npm:** [npmjs.com/package/@keshavsoft/npm-source-explorer](https://www.npmjs.com/package/@keshavsoft/npm-source-explorer)
   
   # Or via UNIX composability:
   npx @keshavsoft/npm-repo-resolver express | npx @keshavsoft/git-sibling-cloner

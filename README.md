@@ -186,23 +186,23 @@ The boundary between **Acts 1–3** (Tree Discovery & Git Provenance) and **Act 
 ]
 ```
 
-### Future Evolution: Two Decoupled Packages
+### The Decoupled Architecture (V9)
 
-To honor the UNIX philosophy ("do one thing and do it well"), this codebase is designed to be split into two focused tools:
+To honor the UNIX philosophy ("do one thing and do it well"), the core engine has been decoupled into two dedicated packages:
 
-| Module / Package | Responsibility | Dependencies |
-| :--- | :--- | :--- |
-| **`@keshavsoft/npm-repo-resolver`** | Discovers recursive npm trees & canonical Git remotes (The Source of Truth). | `@npmcli/arborist` (Zero Git dependency) |
-| **`@keshavsoft/git-sibling-cloner`** | Shallow-clones any list of Git repositories into sibling folders with fail-safes. | Native Node.js & Git (Zero npm dependency) |
+| Module / Package | Responsibility | Documentation | Package |
+| :--- | :--- | :--- | :--- |
+| **[`npm-repo-resolver`](https://github.com/keshavsoft/npm-repo-resolver)** | Discovers recursive npm trees & canonical Git remotes (The Source of Truth). | [Docs](https://keshavsoft.github.io/npm-repo-resolver/) | [npm](https://www.npmjs.com/package/npm-repo-resolver) |
+| **[`git-sibling-cloner`](https://github.com/keshavsoft/git-sibling-cloner)** | Shallow-clones any list of Git repositories into sibling folders with fail-safes. | [Docs](https://keshavsoft.github.io/git-sibling-cloner/) | [npm](https://www.npmjs.com/package/git-sibling-cloner) |
 
 This decoupling allows developers to:
 1. **Audit & Dry-Run:** Generate a clean Git provenance manifest without downloading gigabytes of source code.
 2. **Reuse the Cloner:** Use the sibling cloner with any repository manifest (GitHub organizations, internal repos, Cargo/Go modules).
 3. **Compose with Pipes:**
    ```bash
-   npx @keshavsoft/npm-repo-resolver express | npx @keshavsoft/git-sibling-cloner
+   npx npm-repo-resolver express | npx git-sibling-cloner ./sources
    ```
-4. **All-in-One CLI:** `@keshavsoft/npm-source-explorer` remains the flagship, unified experience.
+4. **All-in-One CLI:** `@keshavsoft/npm-source-explorer` remains the flagship, unified experience orchestrating both modules.
 
 See [`STRUCTURE.md`](./STRUCTURE.md) for the complete architectural breakdown and design contracts.
 
