@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "git-sibling-cloner": "^1.0.0",
-    "npm-repo-resolver": "^1.0.0"
+    "npm-repo-resolver": "file:../npm-repo-resolver"
   },
   "keywords": [
     "npm",
